@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "vpc-flow-investigator"
+version = "1.0.0"
+description = "AWS VPC Flow Log analysis and investigation tool"
+authors = ["VPC Flow Log Investigator Team"]
+readme = "README.md"
+packages = [{include = "vpc_flow_investigator", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+boto3 = "^1.35.0"
+botocore = "^1.35.0"
+fastapi = "^0.115.0"
+uvicorn = "^0.32.0"
+jinja2 = "^3.1.0"
+python-multipart = "^0.0.12"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+black = "^25"
+isort = "^6"
+mypy = "^1.13.0"
+flake8 = "^7.1.0"
+
+[tool.poetry.scripts]
+vpc-flow-investigator = "vpc_flow_investigator.cli:main"
+vpc-flow-web = "vpc_flow_investigator.web:run_server"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+no_implicit_optional = true
+check_untyped_defs = false
+mypy_path = "src"
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["boto3", "botocore.*"]
+ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = [
+    "E203",  # whitespace before ':' (conflicts with black)
+    "E501",  # line too long (black handles this)
+    "W503",  # line break before binary operator (black prefers this)
+    "W504",  # line break after binary operator
+    "E129",  # visually indented line with same indent as next logical line
+    "E128",  # continuation line under-indented for visual indent
+]

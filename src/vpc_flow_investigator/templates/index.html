@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VPC Flow Log Investigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <link rel="stylesheet" href="/static/themes.css" />
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <script src="/static/theme-switcher.js"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Theme Switcher -->
+    <div class="theme-switcher hidden" id="themeSwitcher">
+      <button class="theme-toggle" id="themeToggle">LCARS MODE</button>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+      <header class="mb-8">
+        <div data-theme-target="lcars" class="hidden lcars-header">
+          <div class="flex items-center mb-4">
+            <picture>
+              <source srcset="/static/investigator-alt.webp" type="image/webp">
+              <img src="/static/investigator-alt.png" alt="VPC Flow Investigator" class="h-16 w-16 mr-4">
+            </picture>
+            <div>
+              <h1>VPC Flow Investigator</h1>
+              <div class="subtitle">
+                STARFLEET SECURITY - Tactical Analysis Terminal
+              </div>
+            </div>
+          </div>
+          <div class="text-sm mt-2 text-gray-400">
+            LCARS Interface v24.0 - Authorized Personnel Only
+          </div>
+        </div>
+        <div data-theme-target="default" class="block">
+          <div class="flex items-center mb-4">
+            <picture>
+              <source srcset="/static/investigator.webp" type="image/webp">
+              <img src="/static/investigator.png" alt="VPC Flow Investigator" class="h-16 w-16 mr-4">
+            </picture>
+            <div>
+              <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                VPC Flow Log Investigator
+              </h1>
+              <p class="text-gray-600">
+                Analyze AWS VPC Flow Logs for security and traffic insights
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Configuration Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Analysis Configuration Panel -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6 lcars-card">
+          <!-- Tab Navigation -->
+          <div class="flex mb-4 border-b">
+            <button id="analysisTab" class="px-4 py-2 border-b-2 border-blue-500 text-blue-600 font-medium">Instance Analysis</button>
+            <button id="cidrTab" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium ml-4">CIDR Scanner</button>
+          </div>
+          
+          <!-- Instance Analysis Form -->
+          <div id="analysisPanel">
+          <h2 class="text-2xl font-semibold mb-4">
+            <span data-theme-target="default">Analysis Configuration</span>
+            <span
+              data-theme-target="lcars"
+              class="hidden text-orange-400 uppercase"
+              >TACTICAL ANALYSIS CONFIGURATION</span
+            >
+          </h2>
+          <form
+            id="analysisForm"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 lcars-grid"
+          >
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <span data-theme-target="default">AWS Profile</span>
+                <span
+                  data-theme-target="lcars"
+                  class="hidden text-cyan-400 uppercase tracking-wider"
+                  >AWS Security Profile</span
+                >
+                <span
+                  data-theme-target="lcars"
+                  class="hidden lcars-status active"
+                ></span>
+              </label>
+              <select
+                id="profile"
+                name="profile"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              >
+                {% for profile in profiles %}
+                <option value="{{ profile }}">{{ profile }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <span data-theme-target="default">Instance ID</span>
+                <span
+                  data-theme-target="lcars"
+                  class="hidden text-cyan-400 uppercase tracking-wider"
+                  >Target Instance ID</span
+                >
+                <span
+                  data-theme-target="lcars"
+                  class="hidden lcars-status warning"
+                ></span>
+              </label>
+              <input
+                type="text"
+                id="instance_id"
+                name="instance_id"
+                placeholder="i-0123456789abcdef0"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <span data-theme-target="default">Region</span>
+                <span
+                  data-theme-target="lcars"
+                  class="hidden text-cyan-400 uppercase tracking-wider"
+                  >Sector Region</span
+                >
+              </label>
+              <select
+                id="region"
+                name="region"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              >
+                <option value="us-east-1" selected>us-east-1</option>
+                <option value="us-east-2">us-east-2</option>
+                <option value="us-west-1">us-west-1</option>
+                <option value="us-west-2">us-west-2</option>
+                <option value="eu-west-1">eu-west-1</option>
+                <option value="eu-west-2">eu-west-2</option>
+                <option value="eu-west-3">eu-west-3</option>
+                <option value="eu-central-1">eu-central-1</option>
+                <option value="ap-southeast-1">ap-southeast-1</option>
+                <option value="ap-southeast-2">ap-southeast-2</option>
+                <option value="ap-northeast-1">ap-northeast-1</option>
+                <option value="ap-northeast-2">ap-northeast-2</option>
+                <option value="ca-central-1">ca-central-1</option>
+                <option value="sa-east-1">sa-east-1</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Analysis Type</label
+              >
+              <select
+                id="analysis"
+                name="analysis"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              >
+                <option value="all">All Analysis Types</option>
+                <option value="traffic-summary">Traffic Summary</option>
+                <option value="ssh-inbound">SSH Inbound</option>
+                <option value="ssh-response">SSH Response</option>
+                <option value="ssh-outbound">SSH Outbound</option>
+                <option value="external-inbound">External Inbound</option>
+                <option value="external-outbound">External Outbound</option>
+                <option value="external-summary">External Summary</option>
+                <option value="top-external">Top External</option>
+                <option value="port-specific">Port Specific</option>
+                <option value="sensitive-ports">Sensitive Ports</option>
+                <option value="rejected">Rejected Traffic</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Start Time</label
+              >
+              <input
+                type="text"
+                id="start_time"
+                name="start_time"
+                placeholder="Select date and time"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >End Time</label
+              >
+              <input
+                type="text"
+                id="end_time"
+                name="end_time"
+                placeholder="Select date and time"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              />
+            </div>
+
+            <div id="portField" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Port Number</label
+              >
+              <input
+                type="number"
+                id="port"
+                name="port"
+                placeholder="443"
+                min="1"
+                max="65535"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 lcars-input"
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <button
+                type="submit"
+                id="analyzeBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-200 lcars-button"
+              >
+                <span id="btnText">Start Analysis</span>
+                <span id="btnSpinner" class="hidden ml-2">
+                  <svg
+                    class="animate-spin h-4 w-4 inline"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </form>
+          </div>
+          
+          <!-- CIDR Scanner Form -->
+          <div id="cidrPanel" class="hidden">
+            <h2 class="text-2xl font-semibold mb-4">CIDR Scanner</h2>
+            <form id="cidrForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">AWS Profile</label>
+                <select id="cidr_profile" name="profile" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  {% for profile in profiles %}
+                  <option value="{{ profile }}">{{ profile }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Log Group Name</label>
+                <input type="text" id="log_group" name="log_group" placeholder="vpc-flow-logs-group" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                <select id="cidr_region" name="region" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="us-east-1" selected>us-east-1</option>
+                  <option value="us-east-2">us-east-2</option>
+                  <option value="us-west-1">us-west-1</option>
+                  <option value="us-west-2">us-west-2</option>
+                  <option value="eu-west-1">eu-west-1</option>
+                  <option value="eu-central-1">eu-central-1</option>
+                  <option value="ap-southeast-1">ap-southeast-1</option>
+                  <option value="ap-northeast-1">ap-northeast-1</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                <input type="text" id="cidr_start_time" name="start_time" placeholder="Select date and time" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                <input type="text" id="cidr_end_time" name="end_time" placeholder="Select date and time" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Upload CIDR JSON (Optional)</label>
+                <input type="file" id="cidr_upload" accept=".json" class="w-full p-2 border border-gray-300 rounded-md mb-4" />
+                <div class="text-xs text-gray-500 mb-4">Upload a JSON file with CIDR ranges to scan against, or leave empty to use default files</div>
+              </div>
+              
+              <div class="md:col-span-2">
+                <button type="submit" id="cidrBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md transition duration-200">
+                  <span id="cidrBtnText">Scan CIDR Ranges</span>
+                  <span id="cidrBtnSpinner" class="hidden ml-2">
+                    <svg class="animate-spin h-4 w-4 inline" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Query Recall System Panel -->
+        <div class="bg-white rounded-lg shadow-md p-6 lcars-card">
+          <h3 class="text-xl font-semibold mb-4">
+            <span data-theme-target="default">Query Recall System</span>
+            <span
+              data-theme-target="lcars"
+              class="hidden text-orange-400 uppercase"
+              >QUERY RECALL SYSTEM</span
+            >
+          </h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <span data-theme-target="default">Query ID</span>
+                <span
+                  data-theme-target="lcars"
+                  class="hidden text-cyan-400 uppercase tracking-wider"
+                  >Query Identifier</span
+                >
+              </label>
+              <input
+                type="text"
+                id="recallQueryId"
+                placeholder="Enter Query ID"
+                class="w-full p-2 border border-gray-300 rounded-md lcars-input"
+              />
+            </div>
+            <button
+              type="button"
+              id="recallBtn"
+              class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 lcars-button"
+            >
+              <span data-theme-target="default">Recall Query</span>
+              <span data-theme-target="lcars" class="hidden uppercase"
+                >Execute Recall</span
+              >
+            </button>
+            <div class="text-xs text-gray-500 mt-2">
+              <span data-theme-target="default"
+                >Enter a previous query ID to recall results</span
+              >
+              <span
+                data-theme-target="lcars"
+                class="hidden text-cyan-400 uppercase"
+                >Historical Query Access</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading/Error States -->
+      <div
+        id="loadingState"
+        class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8"
+      >
+        <div class="flex items-center">
+          <svg
+            class="animate-spin h-5 w-5 text-blue-600 mr-3"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span class="text-blue-800"
+            >Analyzing VPC Flow Logs... This may take a few minutes.</span
+          >
+        </div>
+      </div>
+
+      <div
+        id="errorState"
+        class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-8"
+      >
+        <div class="flex items-center">
+          <svg
+            class="h-5 w-5 text-red-600 mr-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span id="errorMessage" class="text-red-800"></span>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="hidden">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Analysis Summary</h2>
+            <div class="text-sm text-gray-500">
+              Query ID:
+              <span
+                id="queryId"
+                class="font-mono bg-gray-100 px-2 py-1 rounded"
+              ></span>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-blue-600" id="totalLogs">
+                0
+              </div>
+              <div class="text-sm text-gray-600">Total Log Entries</div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+              <div
+                class="text-2xl font-bold text-green-600"
+                id="acceptedTraffic"
+              >
+                0
+              </div>
+              <div class="text-sm text-gray-600">Accepted Connections</div>
+            </div>
+            <div class="bg-red-50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-red-600" id="rejectedTraffic">
+                0
+              </div>
+              <div class="text-sm text-gray-600">Rejected Connections</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <!-- Traffic Chart -->
+          <div
+            class="lg:col-span-2 bg-white rounded-lg shadow-md p-6 lcars-card"
+          >
+            <h3 class="text-xl font-semibold mb-4">
+              <span data-theme-target="default">Traffic Summary</span>
+              <span
+                data-theme-target="lcars"
+                class="hidden text-orange-400 uppercase"
+                >Traffic Analysis Display</span
+              >
+            </h3>
+            <canvas id="trafficChart" width="400" height="200"></canvas>
+          </div>
+
+          <!-- Quick Stats Panel -->
+          <div class="bg-white rounded-lg shadow-md p-6 lcars-card">
+            <h3 class="text-xl font-semibold mb-4">
+              <span data-theme-target="default">Quick Stats</span>
+              <span
+                data-theme-target="lcars"
+                class="hidden text-cyan-400 uppercase"
+                >System Status</span
+              >
+            </h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium">Total Logs</span>
+                <span
+                  id="quickTotalLogs"
+                  class="text-lg font-bold text-blue-600"
+                  >0</span
+                >
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium">Accepted</span>
+                <span
+                  id="quickAccepted"
+                  class="text-lg font-bold text-green-600"
+                  >0</span
+                >
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium">Rejected</span>
+                <span id="quickRejected" class="text-lg font-bold text-red-600"
+                  >0</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Tables Row -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div class="bg-white rounded-lg shadow-md p-4 lcars-card">
+            <h3 class="text-lg font-semibold mb-3">
+              <span data-theme-target="default">SSH Inbound Traffic</span>
+              <span
+                data-theme-target="lcars"
+                class="hidden text-orange-400 uppercase"
+                >SSH Access Attempts</span
+              >
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full table-auto lcars-table text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Source IP
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Action
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Org
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Count
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="sshInboundTable"
+                  class="bg-white divide-y divide-gray-200"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-4 lcars-card">
+            <h3 class="text-lg font-semibold mb-3">
+              <span data-theme-target="default">External Inbound Traffic</span>
+              <span
+                data-theme-target="lcars"
+                class="hidden text-cyan-400 uppercase"
+                >External Connections</span
+              >
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full table-auto lcars-table text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Source IP
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Action
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Org
+                    </th>
+                    <th
+                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                    >
+                      Count
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="externalInboundTable"
+                  class="bg-white divide-y divide-gray-200"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="additionalResults" class="mt-8"></div>
+      </div>
+    </div>
+
+    <script>
+      let trafficChart = null;
+      let startPicker, endPicker, cidrStartPicker, cidrEndPicker;
+
+      // Initialize date pickers
+      document.addEventListener("DOMContentLoaded", function () {
+        // Easter egg: Show LCARS button when 'J' is pressed
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "j" || e.key === "J") {
+            document.getElementById("themeSwitcher").classList.remove("hidden");
+          }
+        });
+
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        startPicker = flatpickr("#start_time", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          defaultDate: yesterday,
+          maxDate: now,
+        });
+
+        endPicker = flatpickr("#end_time", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          defaultDate: now,
+          maxDate: now,
+        });
+        
+        // CIDR date pickers
+        cidrStartPicker = flatpickr("#cidr_start_time", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          defaultDate: yesterday,
+          maxDate: now,
+        });
+        
+        cidrEndPicker = flatpickr("#cidr_end_time", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          defaultDate: now,
+          maxDate: now,
+        });
+        
+        // Tab switching
+        document.getElementById('analysisTab').addEventListener('click', function() {
+          document.getElementById('analysisPanel').classList.remove('hidden');
+          document.getElementById('cidrPanel').classList.add('hidden');
+          this.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+          document.getElementById('cidrTab').classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+          document.getElementById('cidrTab').classList.add('text-gray-500');
+        });
+        
+        document.getElementById('cidrTab').addEventListener('click', function() {
+          document.getElementById('cidrPanel').classList.remove('hidden');
+          document.getElementById('analysisPanel').classList.add('hidden');
+          this.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+          this.classList.remove('text-gray-500');
+          document.getElementById('analysisTab').classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+          document.getElementById('analysisTab').classList.add('text-gray-500');
+        });
+
+        // Show/hide port field based on analysis type
+        document
+          .getElementById("analysis")
+          .addEventListener("change", function () {
+            const portField = document.getElementById("portField");
+            const portInput = document.getElementById("port");
+            if (this.value === "port-specific") {
+              portField.classList.remove("hidden");
+              portInput.required = true;
+            } else {
+              portField.classList.add("hidden");
+              portInput.required = false;
+              portInput.value = "";
+            }
+          });
+
+        // Initialize port field visibility
+        const analysisSelect = document.getElementById("analysis");
+        const portField = document.getElementById("portField");
+        const portInput = document.getElementById("port");
+
+        // Hide port field initially
+        portField.classList.add("hidden");
+        portInput.required = false;
+
+        // Show/hide based on current selection
+        if (analysisSelect.value === "port-specific") {
+          portField.classList.remove("hidden");
+          portInput.required = true;
+        }
+      });
+
+      // Input validation functions
+      function validateInstanceId(instanceId) {
+        const pattern = /^i-[0-9a-f]{8,17}$/;
+        return pattern.test(instanceId);
+      }
+
+      function validateRegion(region) {
+        if (!region) return false; // Now required
+        const pattern = /^[a-z]{2}-[a-z]+-[0-9]$/;
+        return pattern.test(region);
+      }
+
+      function sanitizeInput(input) {
+        return input.replace(/[<>"'&]/g, "");
+      }
+
+      document
+        .getElementById("analysisForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Input validation
+          const instanceId = document
+            .getElementById("instance_id")
+            .value.trim();
+          const region = document.getElementById("region").value.trim();
+
+          const port = document.getElementById("port").value;
+          const analysisType = document.getElementById("analysis").value;
+
+          if (!validateInstanceId(instanceId)) {
+            alert(
+              "Invalid Instance ID format. Must be like: i-0123456789abcdef0"
+            );
+            return;
+          }
+
+          if (!validateRegion(region)) {
+            alert("Invalid region format. Must be like: us-east-1");
+            return;
+          }
+
+          if (analysisType === "port-specific") {
+            const portNum = parseInt(port);
+            if (!port || portNum < 1 || portNum > 65535) {
+              alert("Port number must be between 1 and 65535");
+              return;
+            }
+          }
+
+          // Convert datetime to Unix timestamps
+          const startTime = startPicker.selectedDates[0];
+          const endTime = endPicker.selectedDates[0];
+
+          if (!startTime || !endTime) {
+            alert("Please select both start and end times");
+            return;
+          }
+
+          if (startTime >= endTime) {
+            alert("Start time must be before end time");
+            return;
+          }
+
+          const timeDiff = (endTime - startTime) / (1000 * 60 * 60 * 24);
+          if (timeDiff > 7) {
+            if (
+              !confirm(
+                "Time range is more than 7 days. This may take a long time. Continue?"
+              )
+            ) {
+              return;
+            }
+          }
+
+          const formData = new FormData(this);
+
+          // Sanitize inputs
+          formData.set("instance_id", sanitizeInput(instanceId));
+          formData.set("region", sanitizeInput(region));
+          formData.set(
+            "start_time",
+            Math.floor(startTime.getTime() / 1000).toString()
+          );
+          formData.set(
+            "end_time",
+            Math.floor(endTime.getTime() / 1000).toString()
+          );
+
+          // Only include port if port-specific analysis is selected and port is provided
+          if (analysisType !== "port-specific" || !port) {
+            formData.delete("port");
+          }
+          const analyzeBtn = document.getElementById("analyzeBtn");
+          const btnText = document.getElementById("btnText");
+          const btnSpinner = document.getElementById("btnSpinner");
+          const loadingState = document.getElementById("loadingState");
+          const errorState = document.getElementById("errorState");
+          const results = document.getElementById("results");
+
+          analyzeBtn.disabled = true;
+          btnText.textContent = "Analyzing...";
+          btnSpinner.classList.remove("hidden");
+          loadingState.classList.remove("hidden");
+          errorState.classList.add("hidden");
+          results.classList.add("hidden");
+
+          try {
+            const response = await fetch("/api/analyze", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(error.detail || "Analysis failed");
+            }
+
+            const data = await response.json();
+            displayResults(data, data.query_id);
+          } catch (error) {
+            console.error("Analysis error:", error);
+            document.getElementById("errorMessage").textContent = error.message;
+            errorState.classList.remove("hidden");
+          } finally {
+            analyzeBtn.disabled = false;
+            btnText.textContent = "Start Analysis";
+            btnSpinner.classList.add("hidden");
+            loadingState.classList.add("hidden");
+          }
+        });
+
+      // Recall query functionality
+      document
+        .getElementById("recallBtn")
+        .addEventListener("click", async function () {
+          const queryId = document.getElementById("recallQueryId").value.trim();
+          if (!queryId) {
+            alert("Please enter a Query ID");
+            return;
+          }
+
+          // Validate query ID format (alphanumeric and hyphens only)
+          if (!/^[a-zA-Z0-9-]+$/.test(queryId)) {
+            alert("Invalid Query ID format");
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/query/${queryId}`);
+            if (!response.ok) {
+              throw new Error("Query not found");
+            }
+
+            const data = await response.json();
+            displayResults(data, queryId);
+          } catch (error) {
+            alert(`Failed to recall query: ${error.message}`);
+          }
+        });
+        
+      // CIDR form submission
+      document.getElementById('cidrForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const logGroup = document.getElementById('log_group').value.trim();
+        if (!logGroup) {
+          alert('Please enter a log group name');
+          return;
+        }
+        
+        const startTime = cidrStartPicker.selectedDates[0];
+        const endTime = cidrEndPicker.selectedDates[0];
+        
+        if (!startTime || !endTime) {
+          alert('Please select both start and end times');
+          return;
+        }
+        
+        if (startTime >= endTime) {
+          alert('Start time must be before end time');
+          return;
+        }
+        
+        const formData = new FormData(this);
+        formData.set('start_time', Math.floor(startTime.getTime() / 1000).toString());
+        formData.set('end_time', Math.floor(endTime.getTime() / 1000).toString());
+        
+        // Add uploaded file if present
+        const fileInput = document.getElementById('cidr_upload');
+        if (fileInput.files.length > 0) {
+          formData.append('cidr_file', fileInput.files[0]);
+        }
+        
+        const cidrBtn = document.getElementById('cidrBtn');
+        const cidrBtnText = document.getElementById('cidrBtnText');
+        const cidrBtnSpinner = document.getElementById('cidrBtnSpinner');
+        
+        cidrBtn.disabled = true;
+        cidrBtnText.textContent = 'Scanning...';
+        cidrBtnSpinner.classList.remove('hidden');
+        
+        try {
+          const response = await fetch('/api/scan-cidrs', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert('CIDR scan completed successfully!');
+          } else {
+            alert(`CIDR scan failed: ${result.message}`);
+          }
+        } catch (error) {
+          alert(`CIDR scan error: ${error.message}`);
+        } finally {
+          cidrBtn.disabled = false;
+          cidrBtnText.textContent = 'Scan CIDR Ranges';
+          cidrBtnSpinner.classList.add('hidden');
+        }
+      });
+
+      function displayResults(data, queryId = null) {
+        document.getElementById("totalLogs").textContent =
+          data.total_logs.toLocaleString();
+        document.getElementById("quickTotalLogs").textContent =
+          data.total_logs.toLocaleString();
+
+        if (queryId) {
+          document.getElementById("queryId").textContent = queryId;
+        }
+
+        let accepted = 0,
+          rejected = 0;
+        // Calculate from all available analyses
+        Object.values(data.analyses).forEach((analysis) => {
+          if (Array.isArray(analysis)) {
+            analysis.forEach((item) => {
+              if (item.action === "ACCEPT") accepted += item.count || 0;
+              if (item.action === "REJECT") rejected += item.count || 0;
+            });
+          }
+        });
+        document.getElementById("acceptedTraffic").textContent =
+          accepted.toLocaleString();
+        document.getElementById("rejectedTraffic").textContent =
+          rejected.toLocaleString();
+        document.getElementById("quickAccepted").textContent =
+          accepted.toLocaleString();
+        document.getElementById("quickRejected").textContent =
+          rejected.toLocaleString();
+
+        createTrafficChart(data.analyses.traffic_summary || []);
+        console.log("Traffic summary data:", data.analyses.traffic_summary);
+        populateTable("sshInboundTable", data.analyses.ssh_inbound || [], [
+          "source_ip",
+          "action",
+          "organization",
+          "count",
+        ]);
+        populateTable(
+          "externalInboundTable",
+          data.analyses.external_inbound || [],
+          ["source_ip", "action", "organization", "count"]
+        );
+
+        // Display additional analysis results based on selected type
+        displayAdditionalResults(data.analyses);
+
+        document.getElementById("results").classList.remove("hidden");
+      }
+
+      function createTrafficChart(data) {
+        const ctx = document.getElementById("trafficChart").getContext("2d");
+
+        if (trafficChart) trafficChart.destroy();
+
+        if (!data || data.length === 0) {
+          console.log("No traffic summary data available");
+          return;
+        }
+
+        console.log("Creating chart with data:", data);
+
+        const labels = data.map((item) => `${item.protocol} ${item.action}`);
+        const counts = data.map((item) => item.count);
+        const colors = data.map((item) =>
+          item.action === "ACCEPT" ? "#10B981" : "#EF4444"
+        );
+
+        console.log("Chart labels:", labels);
+        console.log("Chart counts:", counts);
+
+        trafficChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Traffic Count",
+                data: counts,
+                backgroundColor: colors,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+      }
+
+      function populateTable(tableId, data, columns) {
+        const tbody = document.getElementById(tableId);
+        tbody.innerHTML = "";
+
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50";
+
+          columns.forEach((col) => {
+            const td = document.createElement("td");
+            td.className = "px-4 py-2 text-sm text-gray-900";
+            td.textContent = row[col] || "-";
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        if (data.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = columns.length;
+          td.className = "px-4 py-2 text-sm text-gray-500 text-center";
+          td.textContent = "No data available";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
+      }
+
+      function displayAdditionalResults(analyses) {
+        const container = document.getElementById("additionalResults");
+        container.innerHTML = "";
+
+        // Display results for different analysis types
+        if (analyses.ssh_response) {
+          createAnalysisSection(
+            container,
+            "SSH Response Traffic",
+            analyses.ssh_response,
+            ["destination_ip", "action", "organization", "count"]
+          );
+        }
+
+        if (analyses.ssh_outbound) {
+          createAnalysisSection(
+            container,
+            "SSH Outbound Connections",
+            analyses.ssh_outbound,
+            ["destination_ip", "action", "organization", "count"]
+          );
+        }
+
+        if (analyses.external_summary) {
+          createAnalysisSection(
+            container,
+            "External Traffic Summary",
+            analyses.external_summary,
+            ["action", "count"]
+          );
+        }
+
+        if (analyses.top_external) {
+          createExternalFlowsSection(container, analyses.top_external);
+        }
+
+        if (analyses.port_specific) {
+          createAnalysisSection(
+            container,
+            "Port-Specific Traffic",
+            analyses.port_specific,
+            ["source_ip", "destination_ip", "action", "count"]
+          );
+        }
+
+        if (analyses.sensitive_ports) {
+          createAnalysisSection(
+            container,
+            "Sensitive Ports Traffic",
+            analyses.sensitive_ports,
+            ["source_ip", "port", "action", "organization", "count"]
+          );
+        }
+
+        if (analyses.rejected) {
+          createRejectedTrafficSection(container, analyses.rejected);
+        }
+      }
+
+      function createExternalFlowsSection(container, data) {
+        // Separate by direction and action
+        const inboundAccept = data.filter(
+          (flow) =>
+            !flow.source_ip.startsWith("10.120.") && flow.action === "ACCEPT"
+        );
+        const inboundReject = data.filter(
+          (flow) =>
+            !flow.source_ip.startsWith("10.120.") && flow.action === "REJECT"
+        );
+        const outboundAccept = data.filter(
+          (flow) =>
+            flow.source_ip.startsWith("10.120.") && flow.action === "ACCEPT"
+        );
+        const outboundReject = data.filter(
+          (flow) =>
+            flow.source_ip.startsWith("10.120.") && flow.action === "REJECT"
+        );
+
+        const section = document.createElement("div");
+        section.className = "bg-white rounded-lg shadow-md p-6 mb-8 lcars-card";
+
+        const heading = document.createElement("h3");
+        heading.className = "text-xl font-semibold mb-4";
+        heading.innerHTML = `
+                <span data-theme-target="default">External Traffic Flows</span>
+                <span data-theme-target="lcars" class="hidden text-orange-400 uppercase">External Network Analysis</span>
+            `;
+        section.appendChild(heading);
+
+        // Main grid for side-by-side layout
+        const mainGrid = document.createElement("div");
+        mainGrid.className = "grid grid-cols-1 xl:grid-cols-2 gap-6";
+
+        // Inbound section
+        const inboundSection = document.createElement("div");
+        inboundSection.innerHTML = `
+                <h4 class="text-lg font-medium mb-3 text-blue-600">
+                    <span data-theme-target="default">Inbound (External → Server)</span>
+                    <span data-theme-target="lcars" class="hidden text-cyan-400 uppercase">Incoming Connections</span>
+                </h4>
+            `;
+
+        const inboundGrid = document.createElement("div");
+        inboundGrid.className = "grid grid-cols-1 lg:grid-cols-2 gap-4";
+
+        const inboundAcceptDiv = document.createElement("div");
+        inboundAcceptDiv.innerHTML =
+          '<h5 class="text-md font-medium mb-2 text-green-600">Accepted</h5>';
+        inboundAcceptDiv.appendChild(
+          createFlowTable(inboundAccept, [
+            "source_ip",
+            "port",
+            "count",
+            "src_org",
+          ])
+        );
+
+        const inboundRejectDiv = document.createElement("div");
+        inboundRejectDiv.innerHTML =
+          '<h5 class="text-md font-medium mb-2 text-red-600">Rejected</h5>';
+        inboundRejectDiv.appendChild(
+          createFlowTable(inboundReject, [
+            "source_ip",
+            "port",
+            "count",
+            "src_org",
+          ])
+        );
+
+        inboundGrid.appendChild(inboundAcceptDiv);
+        inboundGrid.appendChild(inboundRejectDiv);
+        inboundSection.appendChild(inboundGrid);
+
+        // Outbound section
+        const outboundSection = document.createElement("div");
+        outboundSection.innerHTML = `
+                <h4 class="text-lg font-medium mb-3 text-green-600">
+                    <span data-theme-target="default">Outbound (Server → External)</span>
+                    <span data-theme-target="lcars" class="hidden text-green-400 uppercase">Outgoing Connections</span>
+                </h4>
+            `;
+
+        const outboundGrid = document.createElement("div");
+        outboundGrid.className = "grid grid-cols-1 lg:grid-cols-2 gap-4";
+
+        const outboundAcceptDiv = document.createElement("div");
+        outboundAcceptDiv.innerHTML =
+          '<h5 class="text-md font-medium mb-2 text-green-600">Accepted</h5>';
+        outboundAcceptDiv.appendChild(
+          createFlowTable(outboundAccept, [
+            "destination_ip",
+            "port",
+            "count",
+            "dst_org",
+          ])
+        );
+
+        const outboundRejectDiv = document.createElement("div");
+        outboundRejectDiv.innerHTML =
+          '<h5 class="text-md font-medium mb-2 text-red-600">Rejected</h5>';
+        outboundRejectDiv.appendChild(
+          createFlowTable(outboundReject, [
+            "destination_ip",
+            "port",
+            "count",
+            "dst_org",
+          ])
+        );
+
+        outboundGrid.appendChild(outboundAcceptDiv);
+        outboundGrid.appendChild(outboundRejectDiv);
+        outboundSection.appendChild(outboundGrid);
+
+        mainGrid.appendChild(inboundSection);
+        mainGrid.appendChild(outboundSection);
+        section.appendChild(mainGrid);
+        container.appendChild(section);
+      }
+
+      function createRejectedTrafficSection(container, data) {
+        // Separate inbound and outbound rejected traffic
+        const inboundRejected = data.filter(
+          (flow) => !flow.source_ip.startsWith("10.120.")
+        );
+        const outboundRejected = data.filter((flow) =>
+          flow.source_ip.startsWith("10.120.")
+        );
+
+        const section = document.createElement("div");
+        section.className = "bg-white rounded-lg shadow-md p-6 mb-8 lcars-card";
+
+        const heading = document.createElement("h3");
+        heading.className = "text-xl font-semibold mb-4";
+        heading.innerHTML = `
+                <span data-theme-target="default">Rejected Traffic</span>
+                <span data-theme-target="lcars" class="hidden text-red-400 uppercase">Security Blocks</span>
+            `;
+        section.appendChild(heading);
+
+        const gridContainer = document.createElement("div");
+        gridContainer.className = "grid grid-cols-1 lg:grid-cols-2 gap-6";
+
+        // Inbound rejected
+        const inboundDiv = document.createElement("div");
+        inboundDiv.innerHTML = `
+                <h4 class="text-lg font-medium mb-3 text-red-600">
+                    <span data-theme-target="default">Inbound Rejected (External → Server)</span>
+                    <span data-theme-target="lcars" class="hidden text-red-400 uppercase">Incoming Blocks</span>
+                </h4>
+            `;
+        inboundDiv.appendChild(
+          createFlowTable(inboundRejected, [
+            "source_ip",
+            "port",
+            "count",
+            "external_org",
+          ])
+        );
+
+        // Outbound rejected
+        const outboundDiv = document.createElement("div");
+        outboundDiv.innerHTML = `
+                <h4 class="text-lg font-medium mb-3 text-orange-600">
+                    <span data-theme-target="default">Outbound Rejected (Server → External)</span>
+                    <span data-theme-target="lcars" class="hidden text-orange-400 uppercase">Outgoing Blocks</span>
+                </h4>
+            `;
+        outboundDiv.appendChild(
+          createFlowTable(outboundRejected, [
+            "destination_ip",
+            "port",
+            "count",
+            "external_org",
+          ])
+        );
+
+        gridContainer.appendChild(inboundDiv);
+        gridContainer.appendChild(outboundDiv);
+        section.appendChild(gridContainer);
+        container.appendChild(section);
+      }
+
+      function createFlowTable(data, columns) {
+        const tableContainer = document.createElement("div");
+        tableContainer.className = "overflow-x-auto";
+
+        const table = document.createElement("table");
+        table.className = "min-w-full table-auto lcars-table text-sm";
+
+        const thead = document.createElement("thead");
+        thead.className = "bg-gray-50";
+        const headerRow = document.createElement("tr");
+
+        const columnLabels = {
+          source_ip: "Source IP",
+          destination_ip: "Dest IP",
+          port: "Port",
+          action: "Action",
+          count: "Count",
+          src_org: "Organization",
+          dst_org: "Organization",
+          external_org: "Organization",
+          organization: "Organization",
+        };
+
+        columns.forEach((col) => {
+          const th = document.createElement("th");
+          th.className =
+            "px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase";
+          th.textContent = columnLabels[col] || col;
+          headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        tbody.className = "bg-white divide-y divide-gray-200";
+
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50";
+
+          columns.forEach((col) => {
+            const td = document.createElement("td");
+            td.className = "px-3 py-2 text-sm text-gray-900";
+            td.textContent = row[col] || "-";
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        if (data.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = columns.length;
+          td.className = "px-3 py-2 text-sm text-gray-500 text-center";
+          td.textContent = "No data available";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        tableContainer.appendChild(table);
+        return tableContainer;
+      }
+
+      function createAnalysisSection(container, title, data, columns) {
+        const section = document.createElement("div");
+        section.className = "bg-white rounded-lg shadow-md p-6 mb-8";
+
+        const heading = document.createElement("h3");
+        heading.className = "text-xl font-semibold mb-4";
+        heading.textContent = title;
+        section.appendChild(heading);
+
+        const tableContainer = document.createElement("div");
+        tableContainer.className = "overflow-x-auto";
+
+        const table = document.createElement("table");
+        table.className = "min-w-full table-auto lcars-table";
+
+        const thead = document.createElement("thead");
+        thead.className = "bg-gray-50";
+        const headerRow = document.createElement("tr");
+
+        columns.forEach((col) => {
+          const th = document.createElement("th");
+          th.className =
+            "px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase";
+          th.textContent = col.replace("_", " ");
+          headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        tbody.className = "bg-white divide-y divide-gray-200";
+
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50";
+
+          columns.forEach((col) => {
+            const td = document.createElement("td");
+            td.className = "px-4 py-2 text-sm text-gray-900";
+            td.textContent = row[col] || "-";
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        if (data.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = columns.length;
+          td.className = "px-4 py-2 text-sm text-gray-500 text-center";
+          td.textContent = "No data available";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        tableContainer.appendChild(table);
+        section.appendChild(tableContainer);
+        container.appendChild(section);
+      }
+    </script>
+  </body>
+</html>
