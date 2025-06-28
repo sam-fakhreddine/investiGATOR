@@ -33,6 +33,12 @@ format: ## Format code
 	poetry run black src/ tests/
 	poetry run isort src/ tests/
 
+precommit-install: ## Install pre-commit hooks
+	poetry run pre-commit install
+
+precommit-run: ## Run pre-commit hooks on all files
+	poetry run pre-commit run --all-files
+
 clean: ## Clean build artifacts
 	find . -type d -name __pycache__ -delete
 	find . -type f -name "*.pyc" -delete

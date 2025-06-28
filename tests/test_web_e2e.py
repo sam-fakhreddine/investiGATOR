@@ -33,7 +33,7 @@ class TestWebE2E:
             "vpc_id": "vpc-12345",
             "region": "us-east-1",
         }
-        
+
         sample_logs = [
             {
                 "srcaddr": "203.0.113.12",
@@ -56,11 +56,19 @@ class TestWebE2E:
         ]
 
         with patch("vpc_flow_investigator.web.get_instance_info") as mock_get_instance:
-            with patch("vpc_flow_investigator.web.find_vpc_flow_log_group") as mock_find_log_group:
-                with patch("vpc_flow_investigator.web.download_vpc_flow_logs") as mock_download:
+            with patch(
+                "vpc_flow_investigator.web.find_vpc_flow_log_group"
+            ) as mock_find_log_group:
+                with patch(
+                    "vpc_flow_investigator.web.download_vpc_flow_logs"
+                ) as mock_download:
                     with patch("vpc_flow_investigator.web.read_log_file") as mock_read:
-                        with patch("vpc_flow_investigator.web.filter_logs") as mock_filter:
-                            with patch("vpc_flow_investigator.web.FileCleanupService.cleanup_file"):
+                        with patch(
+                            "vpc_flow_investigator.web.filter_logs"
+                        ) as mock_filter:
+                            with patch(
+                                "vpc_flow_investigator.web.FileCleanupService.cleanup_file"
+                            ):
                                 # Setup mocks
                                 mock_get_instance.return_value = mock_instance_info
                                 mock_find_log_group.return_value = "test-log-group"
@@ -83,13 +91,13 @@ class TestWebE2E:
 
                                 assert response.status_code == 200
                                 data = response.json()
-                                
+
                                 # Verify response structure
                                 assert "total_logs" in data
                                 assert "analyses" in data
                                 assert "query_id" in data
                                 assert data["total_logs"] == 2
-                                
+
                                 # Verify analyses were performed
                                 analyses = data["analyses"]
                                 assert "traffic_summary" in analyses
@@ -100,7 +108,7 @@ class TestWebE2E:
         # Test with invalid instance ID
         with patch("vpc_flow_investigator.web.get_instance_info") as mock_get_instance:
             mock_get_instance.return_value = None
-            
+
             response = client.post(
                 "/api/analyze",
                 data={
@@ -109,7 +117,7 @@ class TestWebE2E:
                     "analysis": "all",
                 },
             )
-            
+
             assert response.status_code == 400
 
     def test_cidr_scan_workflow(self, client):
@@ -126,9 +134,13 @@ class TestWebE2E:
             }
         ]
 
-        with patch("vpc_flow_investigator.aws_utils.download_vpc_flow_logs") as mock_download:
+        with patch(
+            "vpc_flow_investigator.aws_utils.download_vpc_flow_logs"
+        ) as mock_download:
             with patch("vpc_flow_investigator.parser.read_log_file") as mock_read:
-                with patch("vpc_flow_investigator.cidr_analyzer.CIDRAnalyzer") as mock_analyzer_class:
+                with patch(
+                    "vpc_flow_investigator.cidr_analyzer.CIDRAnalyzer"
+                ) as mock_analyzer_class:
                     mock_download.return_value = "/tmp/test.log"
                     mock_read.return_value = iter(sample_logs)
                     mock_analyzer = Mock()
@@ -158,7 +170,9 @@ class TestWebE2E:
         assert data["status"] == "ok"
 
         # Test profiles endpoint
-        with patch("vpc_flow_investigator.web.AWSProfileService.get_profiles") as mock_profiles:
+        with patch(
+            "vpc_flow_investigator.web.AWSProfileService.get_profiles"
+        ) as mock_profiles:
             mock_profiles.return_value = ["default", "test"]
             response = client.get("/api/profiles")
             assert response.status_code == 200
@@ -171,7 +185,9 @@ class TestWebE2E:
 
     def test_home_page_rendering(self, client):
         """Test home page renders correctly."""
-        with patch("vpc_flow_investigator.web.AWSProfileService.get_profiles") as mock_profiles:
+        with patch(
+            "vpc_flow_investigator.web.AWSProfileService.get_profiles"
+        ) as mock_profiles:
             mock_profiles.return_value = ["default", "production"]
             response = client.get("/")
             assert response.status_code == 200
@@ -180,7 +196,7 @@ class TestWebE2E:
     def test_concurrent_requests(self, client):
         """Test handling of concurrent requests."""
         import concurrent.futures
-        
+
         def make_request():
             response = client.get("/api/test")
             return response.status_code == 200
@@ -188,7 +204,9 @@ class TestWebE2E:
         # Test 10 concurrent requests
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(make_request) for _ in range(10)]
-            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            results = [
+                future.result() for future in concurrent.futures.as_completed(futures)
+            ]
 
         assert all(results), "Some concurrent requests failed"
 
@@ -206,11 +224,16 @@ class TestWebE2E:
         }
 
         with patch("vpc_flow_investigator.web.get_instance_info") as mock_get_instance:
-            mock_get_instance.return_value = None  # Will cause 400 error, but should handle large payload
-            
+            mock_get_instance.return_value = (
+                None  # Will cause 400 error, but should handle large payload
+            )
+
             response = client.post("/api/analyze", data=large_data)
             # Should handle the request (even if it fails due to invalid instance)
-            assert response.status_code in [400, 500]  # Should not be a connection error
+            assert response.status_code in [
+                400,
+                500,
+            ]  # Should not be a connection error
 
 
 if __name__ == "__main__":

@@ -26,29 +26,11 @@ from .analyzers import (
     ssh_response_traffic,
     top_external_traffic_flows,
 )
-from .aws_utils import (
-    download_vpc_flow_logs,
-    find_vpc_flow_log_group,
-    get_instance_info,
-)
-from .config import (
-    DEFAULT_CONFIG,
-    SENSITIVE_PORTS,
-    VPC_FLOW_LOG_PATTERN,
-)
-from .parser import (
-    filter_logs,
-    parse_log_line,
-    read_log_file,
-)
-from .time_utils import (
-    parse_time_duration,
-    parse_time_input,
-)
-from .whois_utils import (
-    get_whois_info,
-    is_external_ip,
-)
+from .aws_utils import download_vpc_flow_logs, find_vpc_flow_log_group, get_instance_info
+from .config import DEFAULT_CONFIG, SENSITIVE_PORTS, VPC_FLOW_LOG_PATTERN
+from .parser import filter_logs, parse_log_line, read_log_file
+from .time_utils import parse_time_duration, parse_time_input
+from .whois_utils import get_whois_info, is_external_ip
 
 __all__ = [
     # Analyzers
