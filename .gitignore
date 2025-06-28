@@ -63,7 +63,7 @@ htmlcov/
 dmypy.json
 
 # Poetry
-poetry.lock
+#poetry.lock
 
 # Local config
 config/local.yaml
