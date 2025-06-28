@@ -5,12 +5,14 @@ This document describes how to test the investiGATOR web interface using GitHub 
 ## GitHub Actions Workflows
 
 ### 1. Main CI Workflow (`.github/workflows/ci.yml`)
+
 - Runs on every push and pull request
 - Includes basic web tests as part of the main test suite
 - Tests Python 3.12 and 3.13 compatibility
 - Includes code coverage reporting
 
 ### 2. Web-Specific Tests (`.github/workflows/web-tests.yml`)
+
 - Triggered by changes to web-related files
 - Comprehensive testing including:
   - **API Tests**: FastAPI endpoint testing
@@ -21,12 +23,14 @@ This document describes how to test the investiGATOR web interface using GitHub 
 ## Test Structure
 
 ### Unit Tests (`tests/test_web.py`)
+
 - FastAPI endpoint testing using TestClient
 - Individual analyzer class testing
 - Service class testing (AWS profiles, file cleanup, etc.)
 - Mock-based testing for external dependencies
 
 ### End-to-End Tests (`tests/test_web_e2e.py`)
+
 - Complete workflow testing
 - Error handling scenarios
 - Concurrent request testing
@@ -35,22 +39,26 @@ This document describes how to test the investiGATOR web interface using GitHub 
 ## Running Tests Locally
 
 ### Prerequisites
+
 ```bash
 # Install test dependencies
 poetry install --with dev
 ```
 
 ### Run All Web Tests
+
 ```bash
 make test-web
 ```
 
 ### Run Web Tests with Coverage
+
 ```bash
 make test-web-cov
 ```
 
 ### Run Specific Test Files
+
 ```bash
 # Unit tests only
 poetry run pytest tests/test_web.py -v
@@ -65,6 +73,7 @@ poetry run pytest tests/test_web.py --cov=src/vpc_flow_investigator/web --cov-re
 ## Test Categories
 
 ### 1. API Endpoint Tests
+
 - `/api/test` - Health check endpoint
 - `/api/profiles` - AWS profiles endpoint
 - `/api/analyze` - Main analysis endpoint
@@ -72,12 +81,14 @@ poetry run pytest tests/test_web.py --cov=src/vpc_flow_investigator/web --cov-re
 - `/api/query/{query_id}` - Query result retrieval
 
 ### 2. Analyzer Tests
+
 - TrafficSummaryAnalyzer
 - SSHInboundAnalyzer
 - ExternalInboundAnalyzer
 - And all other analyzer classes
 
 ### 3. Service Tests
+
 - AWSProfileService
 - FileCleanupService
 - ConfigurationBuilder
@@ -85,17 +96,20 @@ poetry run pytest tests/test_web.py --cov=src/vpc_flow_investigator/web --cov-re
 - LogGroupService
 
 ### 4. Integration Tests
+
 - Complete analysis workflow
 - Error handling scenarios
 - CIDR scanning workflow
 - Concurrent request handling
 
 ### 5. Security Tests
+
 - XSS protection verification
 - SQL injection protection
 - Input validation testing
 
 ### 6. Performance Tests
+
 - Concurrent request handling
 - Large payload processing
 - Response time validation
@@ -103,12 +117,14 @@ poetry run pytest tests/test_web.py --cov=src/vpc_flow_investigator/web --cov-re
 ## Mocking Strategy
 
 The tests use extensive mocking to avoid:
+
 - AWS API calls
 - External network requests
 - File system operations
 - Time-dependent operations
 
 Key mocked components:
+
 - `get_instance_info()` - EC2 instance information
 - `find_vpc_flow_log_group()` - CloudWatch log group discovery
 - `download_vpc_flow_logs()` - Log file downloading
@@ -141,11 +157,13 @@ The web tests are integrated into the CI/CD pipeline:
 ## Debugging Failed Tests
 
 ### Common Issues
+
 1. **Import errors**: Check dependencies in pyproject.toml
 2. **Mock failures**: Verify mock setup matches actual function signatures
 3. **Async issues**: Ensure proper async/await usage in tests
 
 ### Debug Commands
+
 ```bash
 # Run with verbose output
 poetry run pytest tests/test_web.py -v -s
@@ -167,6 +185,7 @@ When adding new web functionality:
 4. Ensure tests pass locally before committing
 
 ### Test Naming Convention
+
 - `test_<functionality>_<scenario>` (e.g., `test_analyze_logs_success`)
 - Group related tests in classes (e.g., `TestAnalysisEndpoint`)
 - Use descriptive docstrings
@@ -174,6 +193,7 @@ When adding new web functionality:
 ## Performance Benchmarks
 
 Current performance targets:
+
 - API response time: < 100ms for simple endpoints
 - Concurrent requests: Handle 50+ simultaneous requests
 - Memory usage: < 100MB during testing
@@ -181,6 +201,7 @@ Current performance targets:
 ## Security Testing
 
 Security tests verify:
+
 - Input sanitization
 - XSS protection
 - SQL injection prevention
