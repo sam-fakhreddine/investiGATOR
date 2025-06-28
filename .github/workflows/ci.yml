@@ -39,8 +39,23 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --with dev
 
+    - name: Install additional test dependencies
+      run: poetry add --group dev httpx pytest-asyncio
+
     - name: Run tests
-      run: poetry run pytest --tb=short || echo "No tests found"
+      run: |
+        poetry run pytest tests/ -v --tb=short --cov=src/vpc_flow_investigator --cov-report=xml --cov-report=term-missing
+        
+    - name: Run web tests with 100% coverage requirement
+      run: |
+        poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py -v --cov=vpc_flow_investigator.web --cov-fail-under=100
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: matrix.python-version == '3.12'
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
 
     - name: Run linting
       run: |
@@ -48,6 +63,12 @@ jobs:
         poetry run isort --check-only src/ tests/
         poetry run flake8 src/ tests/
         poetry run mypy src/
+
+    - name: Verify web interface coverage requirement
+      run: |
+        echo "Verifying 100% web interface test coverage..."
+        poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py --cov=vpc_flow_investigator.web --cov-fail-under=100 -q
+        echo "✅ Web interface has 100% test coverage"
 
   security:
     runs-on: ubuntu-latest

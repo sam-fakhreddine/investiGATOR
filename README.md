@@ -82,6 +82,9 @@ poetry install
 # Run tests
 make test
 
+# MANDATORY: Verify 100% web interface coverage
+make test-web-100
+
 # Format code
 make format
 
@@ -287,7 +290,7 @@ Source IP            Port   Service         Action   Organization         Count
 198.51.100.2        1433   SQL Server      ACCEPT   Database Corp        8       
 ```
 
-### CIDR Analysis
+### CIDR Analysis (needs fixing)
 
 ```text
 === CIDR Analysis ===
@@ -363,6 +366,7 @@ poetry run pytest tests/test_basic_functionality.py::TestLogParsing
 ```
 
 **Test Coverage:**
+
 - VPC Flow Log parsing and validation
 - Log filtering by instance and time range
 - Configuration validation
@@ -372,7 +376,7 @@ poetry run pytest tests/test_basic_functionality.py::TestLogParsing
 
 ## 🤝 Contributing
 
-We welcome contributions! 
+We welcome contributions!
 
 ### Development Workflow
 

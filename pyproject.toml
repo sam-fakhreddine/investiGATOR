@@ -24,6 +24,12 @@ flake8 = "^7.1.0"
 python-semantic-release = "^10.1.0"
 pre-commit = "^4.0.0"
 commitizen = "^4.0.0"
+httpx = "^0.27.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^6.0.0"
+pytest-benchmark = "^4.0.0"
+bandit = "^1.7.0"
+safety = "^3.0.0"
 
 [tool.poetry.scripts]
 vpc-flow-investigator = "vpc_flow_investigator.cli:main"
@@ -124,3 +130,16 @@ commit_message = "chore(release): {version}"
 tag_format = "v{version}"
 changelog_file = "CHANGELOG.md"
 upload_to_vcs_release = false
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 100
+include = ["**/web.py"]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]

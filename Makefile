@@ -12,8 +12,18 @@ setup: ## Run initial project setup
 install: ## Install dependencies
 	poetry install
 
-test: ## Run tests
-	poetry run pytest tests/
+test: ## Run all tests
+	poetry run pytest tests/ -v
+
+test-web: ## Run web interface tests only
+	poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py -v
+
+test-web-cov: ## Run web tests with coverage
+	poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py -v --cov=vpc_flow_investigator.web --cov-report=html --cov-report=term-missing
+
+test-web-100: ## Verify 100% web test coverage (required for release)
+	poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py --cov=vpc_flow_investigator.web --cov-fail-under=100 -q
+	@echo "✅ Web interface has 100% test coverage"
 
 lint: ## Run linting
 	poetry run flake8 src/

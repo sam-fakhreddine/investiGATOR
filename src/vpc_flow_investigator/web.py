@@ -70,7 +70,7 @@ class RouteRegistrar:
             """Serve the main web interface."""
             profiles = AWSProfileService.get_profiles()
             return templates.TemplateResponse(
-                "index.html", {"request": request, "profiles": profiles}
+                request, "index.html", {"profiles": profiles}
             )
 
         @app.get("/api/profiles")
