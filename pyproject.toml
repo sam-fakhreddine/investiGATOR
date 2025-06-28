@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vpc-flow-investigator"
-version = "1.0.2"
+version = "1.0.3"
 description = "AWS VPC Flow Log analysis and investigation tool"
 authors = ["VPC Flow Log Investigator Team"]
 readme = "README.md"
