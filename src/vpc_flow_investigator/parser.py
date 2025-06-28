@@ -38,9 +38,7 @@ class LogFileReader:
         else:
             yield from self._read_text_file(path)
 
-    def _read_compressed_file(
-        self, path: Path
-    ) -> Generator[dict[str, Any], None, None]:
+    def _read_compressed_file(self, path: Path) -> Generator[dict[str, Any], None, None]:
         """Read compressed log file."""
         with gzip.open(path, "rt") as f:
             yield from self._parse_lines(f)

@@ -14,11 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from .aws_utils import (
-    download_vpc_flow_logs,
-    find_vpc_flow_log_group,
-    get_instance_info,
-)
+from .aws_utils import download_vpc_flow_logs, find_vpc_flow_log_group, get_instance_info
 from .config import DEFAULT_CONFIG
 from .logging_utils import (
     generate_query_id,
@@ -147,9 +143,7 @@ class RouteRegistrar:
 
             try:
                 end_time_parsed = (
-                    int(time.time())
-                    if end_time == "now"
-                    else parse_time_input(end_time)
+                    int(time.time()) if end_time == "now" else parse_time_input(end_time)
                 )
                 start_time_parsed = parse_time_input(start_time)
                 log_group = log_group.strip()
@@ -347,9 +341,7 @@ class AnalysisResultProcessor:
         if analysis_type == "all" or analysis_type == "external-inbound":
             analyses["external_inbound"] = ExternalInboundAnalyzer.analyze(logs, config)
         if analysis_type == "all" or analysis_type == "external-outbound":
-            analyses["external_outbound"] = ExternalOutboundAnalyzer.analyze(
-                logs, config
-            )
+            analyses["external_outbound"] = ExternalOutboundAnalyzer.analyze(logs, config)
         if analysis_type == "all" or analysis_type == "external-summary":
             analyses["external_summary"] = ExternalSummaryAnalyzer.analyze(logs, config)
         if analysis_type == "all" or analysis_type == "top-external":
@@ -623,9 +615,7 @@ class ExternalSummaryAnalyzer(BaseAnalyzer):
 
         return [
             {"action": action, "count": count}
-            for action, count in sorted(
-                results.items(), key=lambda x: x[1], reverse=True
-            )
+            for action, count in sorted(results.items(), key=lambda x: x[1], reverse=True)
         ]
 
 

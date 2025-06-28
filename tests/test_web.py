@@ -2,7 +2,6 @@
 Web interface tests for VPC Flow Log Investigator.
 """
 
-import json
 from unittest.mock import Mock, patch
 
 import pytest

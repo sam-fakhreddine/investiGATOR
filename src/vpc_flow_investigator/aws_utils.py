@@ -240,9 +240,7 @@ class VPCFlowLogDownloader:
                     current_end = min(current_start + time_chunk, end_time)
 
                     if debug:
-                        print(
-                            f"[DEBUG] Querying chunk: {current_start} to {current_end}"
-                        )
+                        print(f"[DEBUG] Querying chunk: {current_start} to {current_end}")
 
                     query_id = self._start_query(
                         log_group, instance_id, current_start, current_end, debug
@@ -261,14 +259,10 @@ class VPCFlowLogDownloader:
 
                         # If we got less than 10k results, we can increase chunk size
                         if len(results) < 9000:
-                            time_chunk = min(
-                                time_chunk * 2, 86400
-                            )  # Max 24 hour chunks
+                            time_chunk = min(time_chunk * 2, 86400)  # Max 24 hour chunks
                     else:
                         if debug:
-                            print(
-                                f"[DEBUG] Query failed for chunk: {response['status']}"
-                            )
+                            print(f"[DEBUG] Query failed for chunk: {response['status']}")
                         # Continue with next chunk even if one fails
 
                     current_start = current_end
@@ -298,9 +292,7 @@ class VPCFlowLogDownloader:
     ) -> str:
         """Start CloudWatch Logs query and return query ID."""
         if instance_id:
-            query = (
-                f"fields @timestamp, @message | filter @message like '{instance_id}'"
-            )
+            query = f"fields @timestamp, @message | filter @message like '{instance_id}'"
         else:
             query = "fields @timestamp, @message"
 
@@ -340,11 +332,7 @@ class VPCFlowLogDownloader:
         written_count = 0
         for result in results:
             if message := next(
-                (
-                    field["value"]
-                    for field in result
-                    if field.get("field") == "@message"
-                ),
+                (field["value"] for field in result if field.get("field") == "@message"),
                 None,
             ):
                 file_handle.write(f"{message}\n")

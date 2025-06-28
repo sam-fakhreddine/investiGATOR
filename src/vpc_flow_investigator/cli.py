@@ -21,19 +21,10 @@ from .analyzers import (
     ssh_response_traffic,
     top_external_traffic_flows,
 )
-from .aws_utils import (
-    download_vpc_flow_logs,
-    find_vpc_flow_log_group,
-    get_instance_info,
-)
+from .aws_utils import download_vpc_flow_logs, find_vpc_flow_log_group, get_instance_info
 from .cidr_scanner import scan_flowlog_for_cidrs
 from .config import DEFAULT_CONFIG
-from .logging_utils import (
-    generate_query_id,
-    log_query_end,
-    log_query_start,
-    setup_logger,
-)
+from .logging_utils import generate_query_id, log_query_end, log_query_start, setup_logger
 from .parser import filter_logs, read_log_file
 from .time_utils import parse_time_input
 
@@ -234,9 +225,7 @@ class ConfigurationBuilder:
     def _get_instance_info(self) -> dict[str, Any]:
         """Get instance information from AWS."""
         if self.config.get("debug"):
-            print(
-                f"[DEBUG] Getting information for instance {self.args.instance_id}..."
-            )
+            print(f"[DEBUG] Getting information for instance {self.args.instance_id}...")
             print(f"[DEBUG] Region: {self.args.region}")
             print(f"[DEBUG] Profile: {self.args.profile}")
         else:
@@ -278,9 +267,7 @@ class ConfigurationBuilder:
                     f"[DEBUG] Finding VPC Flow Log group for VPC {instance_info['vpc_id']}..."
                 )
             else:
-                print(
-                    f"Finding VPC Flow Log group for VPC {instance_info['vpc_id']}..."
-                )
+                print(f"Finding VPC Flow Log group for VPC {instance_info['vpc_id']}...")
 
             log_group = find_vpc_flow_log_group(
                 instance_info["vpc_id"], self.config["region"], self.args.profile

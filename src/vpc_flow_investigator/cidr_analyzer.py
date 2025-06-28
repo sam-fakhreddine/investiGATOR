@@ -121,9 +121,7 @@ class CIDRAnalyzer:
             )
 
 
-def cidr_connections_analysis(
-    logs: List[Dict[str, Any]], config: Dict[str, Any]
-) -> None:
+def cidr_connections_analysis(logs: List[Dict[str, Any]], config: Dict[str, Any]) -> None:
     """Analyze connections to IPs in CIDR ranges - function for CLI integration."""
     analyzer = CIDRAnalyzer()
     analyzer.analyze_cidr_connections(logs, config)
