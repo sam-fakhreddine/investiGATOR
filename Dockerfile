@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN pip install poetry
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false \
+    && poetry install --only=main --no-dev
+
+COPY src/ ./src/
+COPY config/ ./config/
+
+EXPOSE 8000
+
+CMD ["python", "-m", "vpc_flow_investigator.web"]
