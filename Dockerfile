@@ -6,7 +6,7 @@ RUN pip install poetry
 
 COPY pyproject.toml ./
 RUN poetry config virtualenvs.create false \
-    && poetry install --only=main --no-dev
+    && poetry install --only=main
 
 COPY src/ ./src/
 COPY config/ ./config/
