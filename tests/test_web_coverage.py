@@ -3,8 +3,10 @@ Additional tests to achieve 100% coverage for web interface.
 """
 
 from unittest.mock import Mock, patch
+
 import pytest
 from fastapi.testclient import TestClient
+
 from vpc_flow_investigator.web import WebApplicationFactory
 
 
@@ -20,9 +22,10 @@ class TestMissingCoverage:
 
     def test_scan_cidrs_with_valid_json_file(self, client):
         """Test CIDR scanning with valid JSON file upload."""
+        import json
         from io import BytesIO
         import json
-
+        
         valid_json_data = {"test": {"cidrs": ["192.168.1.0/24"]}}
         valid_json = BytesIO(json.dumps(valid_json_data).encode())
 
@@ -83,14 +86,9 @@ class TestMissingCoverage:
     def test_all_analyzer_branches(self):
         """Test all analyzer branches for complete coverage."""
         from vpc_flow_investigator.web import (
-            SSHInboundAnalyzer,
-            SSHResponseAnalyzer,
-            SSHOutboundAnalyzer,
-            ExternalOutboundAnalyzer,
-            TopExternalAnalyzer,
-            SensitivePortsAnalyzer,
-            RejectedTrafficAnalyzer,
-            PortSpecificAnalyzer,
+            SSHInboundAnalyzer, SSHResponseAnalyzer, SSHOutboundAnalyzer,
+            ExternalOutboundAnalyzer, TopExternalAnalyzer, SensitivePortsAnalyzer,
+            RejectedTrafficAnalyzer, PortSpecificAnalyzer
         )
 
         # Test logs with various scenarios

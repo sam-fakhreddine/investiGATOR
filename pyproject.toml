@@ -14,6 +14,7 @@ fastapi = "^0.115.0"
 uvicorn = "^0.34.0"
 jinja2 = "^3.1.0"
 python-multipart = "^0.0.20"
+pre-commit = "^4.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"
@@ -40,7 +41,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 88
+line-length = 90
 target-version = ['py312']
 extend-exclude = '''
 /(
@@ -57,7 +58,7 @@ extend-exclude = '''
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 90
 skip_glob = [
     ".venv/*",
     "venv/*",
@@ -101,7 +102,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.flake8]
-max-line-length = 88
+max-line-length = 90
 exclude = [
     ".venv",
     "venv",
