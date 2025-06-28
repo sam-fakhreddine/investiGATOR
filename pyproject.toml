@@ -21,6 +21,9 @@ black = "^25"
 isort = "^6"
 mypy = "^1.13.0"
 flake8 = "^7.1.0"
+python-semantic-release = "^9.8.8"
+pre-commit = "^4.0.0"
+commitizen = "^3.29.0"
 
 [tool.poetry.scripts]
 vpc-flow-investigator = "vpc_flow_investigator.cli:main"
@@ -63,3 +66,11 @@ extend-ignore = [
     "E129",  # visually indented line with same indent as next logical line
     "E128",  # continuation line under-indented for visual indent
 ]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+build_command = "poetry build"
+commit_message = "chore(release): {version}"
+tag_format = "v{version}"
+changelog_file = "CHANGELOG.md"
+upload_to_vcs_release = true
