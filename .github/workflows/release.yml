@@ -46,12 +46,51 @@ jobs:
     - name: Install dependencies
       run: poetry install
 
-    - name: Run tests and linting
+    - name: Auto-fix formatting issues
       run: |
-        poetry run pytest --verbose || echo "⚠️ Tests failed but continuing with release"
+        echo "🔧 Auto-fixing formatting issues..."
+        poetry run black .
+        poetry run isort .
+        
+    - name: Check for remaining issues
+      run: |
+        echo "🔍 Checking for any remaining issues..."
         poetry run black --check . || echo "⚠️ Code formatting issues detected"
         poetry run isort --check-only . || echo "⚠️ Import sorting issues detected"
         poetry run flake8 . || echo "⚠️ Linting issues detected"
+
+    - name: Commit formatting fixes
+      run: |
+        if [[ -n $(git status --porcelain) ]]; then
+          echo "📝 Committing auto-formatting fixes..."
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "style: auto-fix formatting issues [skip ci]"
+          git push
+        else
+          echo "✅ No formatting changes needed"
+        fi
+
+    - name: Run tests
+      run: |
+        poetry run pytest --verbose || echo "⚠️ Tests failed but continuing with release"
+
+    - name: Ensure CHANGELOG.md exists
+      run: |
+        if [ ! -f CHANGELOG.md ]; then
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)," >> CHANGELOG.md
+          echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git add CHANGELOG.md
+          echo "📝 Created initial CHANGELOG.md"
+        else
+          echo "✅ CHANGELOG.md already exists"
+        fi
 
     - name: Build package
       run: poetry build
