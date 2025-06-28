@@ -115,6 +115,13 @@ jobs:
       env:
         POETRY_ACTIVE: 1
 
+    - name: Build package for release
+      if: steps.release.outputs.released == 'true'
+      run: |
+        echo "🔄 Rebuilding package with updated version..."
+        rm -rf dist/*
+        poetry build
+
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       if: steps.release.outputs.released == 'true'

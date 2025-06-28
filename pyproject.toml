@@ -119,8 +119,8 @@ extend-ignore = [
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
-build_command = "poetry build"
+build_command = "echo 'Skipping build in semantic release'"
 commit_message = "chore(release): {version}"
 tag_format = "v{version}"
 changelog_file = "CHANGELOG.md"
-upload_to_vcs_release = true
+upload_to_vcs_release = false
