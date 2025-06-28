@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any, Callable
 
 from .analyzers import (
-    cidr_connections_analysis,
     external_inbound_traffic,
     external_outbound_traffic,
     external_traffic_summary,
@@ -384,7 +383,7 @@ class AnalysisRunner:
         "port-specific": port_specific_traffic,
         "rejected": rejected_traffic,
         "sensitive-ports": sensitive_ports_traffic,
-        "cidr-connections": cidr_connections_analysis,
+        # "cidr-connections": cidr_connections_analysis,  # Removed due to missing import
     }
 
     def __init__(
@@ -416,10 +415,9 @@ class AnalysisRunner:
             "external-summary",
             "top-external",
             "rejected",
-            "cidr-connections",
+            # "cidr-connections",  # Removed due to missing import
         ]:
             self._run_single_analysis(analysis_name)
-
         # Run conditional analyses
         if self.config["sensitive_ports"]:
             self._run_single_analysis("sensitive-ports")
