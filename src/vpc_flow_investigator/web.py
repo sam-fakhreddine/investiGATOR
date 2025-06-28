@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import boto3
 import uvicorn
-from fastapi import FastAPI, Form, HTTPException, Request, File, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -126,7 +126,7 @@ class RouteRegistrar:
 
             service = AnalysisService()
             return await service.run_analysis(request_data)
-        
+
         @app.post("/api/scan-cidrs")
         async def scan_cidrs(
             profile: str = Form(...),
@@ -137,43 +137,67 @@ class RouteRegistrar:
             cidr_file: Optional[UploadFile] = File(None),
         ) -> Any:
             """Run CIDR scanning."""
-            from .time_utils import parse_time_input
-            from .cidr_analyzer import CIDRAnalyzer
-            from .aws_utils import download_vpc_flow_logs
-            from .parser import read_log_file
-            import time
             import json
-            import tempfile
-            
+            import time
+
+            from .aws_utils import download_vpc_flow_logs
+            from .cidr_analyzer import CIDRAnalyzer
+            from .parser import read_log_file
+            from .time_utils import parse_time_input
+
             try:
-                end_time_parsed = int(time.time()) if end_time == "now" else parse_time_input(end_time)
+                end_time_parsed = (
+                    int(time.time())
+                    if end_time == "now"
+                    else parse_time_input(end_time)
+                )
                 start_time_parsed = parse_time_input(start_time)
                 log_group = log_group.strip()
-                
+
                 # Handle uploaded CIDR file
                 analyzer = CIDRAnalyzer()
                 if cidr_file:
                     try:
                         content = await cidr_file.read()
-                        cidr_data = json.loads(content.decode('utf-8'))
-                        analyzer.cidr_data = {'uploaded': cidr_data}
+                        cidr_data = json.loads(content.decode("utf-8"))
+                        analyzer.cidr_data = {"uploaded": cidr_data}
                     except json.JSONDecodeError:
-                        return JSONResponse(content={"status": "error", "message": "Invalid JSON file"}, status_code=400)
-                
+                        return JSONResponse(
+                            content={"status": "error", "message": "Invalid JSON file"},
+                            status_code=400,
+                        )
+
                 # Download logs
-                log_file = download_vpc_flow_logs(log_group, None, start_time_parsed, end_time_parsed, region, profile, False)
+                log_file = download_vpc_flow_logs(
+                    log_group,
+                    None,
+                    start_time_parsed,
+                    end_time_parsed,
+                    region,
+                    profile,
+                    False,
+                )
                 if not log_file:
-                    return JSONResponse(content={"status": "error", "message": "Failed to download logs"}, status_code=500)
-                
+                    return JSONResponse(
+                        content={
+                            "status": "error",
+                            "message": "Failed to download logs",
+                        },
+                        status_code=500,
+                    )
+
                 # Analyze logs
                 logs = list(read_log_file(log_file))
                 config = {"limit": 50}
                 analyzer.analyze_cidr_connections(logs, config)
-                
-                return JSONResponse(content={"status": "success", "message": "CIDR scan completed"})
-            except Exception as e:
-                return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
+                return JSONResponse(
+                    content={"status": "success", "message": "CIDR scan completed"}
+                )
+            except Exception as e:
+                return JSONResponse(
+                    content={"status": "error", "message": str(e)}, status_code=500
+                )
 
 
 class AnalysisRequest:

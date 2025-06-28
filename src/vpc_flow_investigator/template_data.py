@@ -1,5 +1,6 @@
 """Template data helpers for consistent data across components."""
 
+
 def get_regions():
     """Get list of AWS regions for form options."""
     return [
@@ -19,6 +20,7 @@ def get_regions():
         {"value": "sa-east-1", "label": "sa-east-1"},
     ]
 
+
 def get_analysis_types():
     """Get list of analysis types for form options."""
     return [
@@ -35,6 +37,7 @@ def get_analysis_types():
         {"value": "sensitive-ports", "label": "Sensitive Ports"},
         {"value": "rejected", "label": "Rejected Traffic"},
     ]
+
 
 def get_template_context(profiles):
     """Get complete template context with all necessary data."""

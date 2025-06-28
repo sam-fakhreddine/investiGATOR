@@ -8,7 +8,6 @@ from typing import Any, Dict, Set
 from .config import SENSITIVE_PORTS
 from .protocol_utils import get_protocol_name
 from .whois_utils import get_whois_info, is_external_ip
-from .cidr_analyzer import cidr_connections_analysis
 
 
 def _batch_whois_lookup(ips: Set[str], vpc_cidr_prefix: str) -> Dict[str, str]:

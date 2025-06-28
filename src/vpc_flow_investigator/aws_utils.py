@@ -335,7 +335,11 @@ class VPCFlowLogDownloader:
         written_count = 0
         for result in results:
             if message := next(
-                (field["value"] for field in result if field.get("field") == "@message"),
+                (
+                    field["value"]
+                    for field in result
+                    if field.get("field") == "@message"
+                ),
                 None,
             ):
                 file_handle.write(f"{message}\n")

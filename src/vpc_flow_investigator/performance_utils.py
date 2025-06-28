@@ -87,7 +87,9 @@ class MemoryOptimizer:
             yield data[i : i + chunk_size]
 
     @staticmethod
-    def get_top_results(results: Dict[Any, int], limit: int = 20) -> List[tuple[Any, int]]:
+    def get_top_results(
+        results: Dict[Any, int], limit: int = 20
+    ) -> List[tuple[Any, int]]:
         """Get top results without sorting entire dataset."""
         if len(results) <= limit:
             return sorted(results.items(), key=lambda x: x[1], reverse=True)

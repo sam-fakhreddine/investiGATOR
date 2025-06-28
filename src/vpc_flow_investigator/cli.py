@@ -4,7 +4,6 @@ Command-line interface for VPC Flow Log Investigator.
 
 import argparse
 import os
-
 import time
 from datetime import datetime
 from typing import Any, Callable
@@ -23,12 +22,12 @@ from .analyzers import (
     ssh_response_traffic,
     top_external_traffic_flows,
 )
-from .cidr_scanner import scan_flowlog_for_cidrs
 from .aws_utils import (
     download_vpc_flow_logs,
     find_vpc_flow_log_group,
     get_instance_info,
 )
+from .cidr_scanner import scan_flowlog_for_cidrs
 from .config import DEFAULT_CONFIG
 from .logging_utils import (
     generate_query_id,
@@ -76,7 +75,8 @@ class ArgumentParser:
     def _add_required_args(parser: argparse.ArgumentParser) -> None:
         """Add required arguments."""
         parser.add_argument(
-            "--instance-id", help="Instance ID to investigate (not required for --scan-cidrs)"
+            "--instance-id",
+            help="Instance ID to investigate (not required for --scan-cidrs)",
         )
 
     @staticmethod
@@ -355,7 +355,7 @@ class ConfigurationPrinter:
             print(f"Log group: {config['log_group']}")
 
         if config.get("debug"):
-            print(f"[DEBUG] Debug mode enabled")
+            print("[DEBUG] Debug mode enabled")
             print(f"[DEBUG] Full config: {config}")
 
         print(
@@ -464,15 +464,22 @@ def main() -> int:
 
     try:
         args = ArgumentParser.parse_args()
-        
+
         # Handle CIDR scanning mode
         if args.scan_cidrs:
             from .time_utils import parse_time_input
-            end_time = int(time.time()) if args.end_time == "now" else parse_time_input(args.end_time)
+
+            end_time = (
+                int(time.time())
+                if args.end_time == "now"
+                else parse_time_input(args.end_time)
+            )
             start_time = parse_time_input(args.start_time)
-            scan_flowlog_for_cidrs(args.scan_cidrs, start_time, end_time, args.region, args.profile)
+            scan_flowlog_for_cidrs(
+                args.scan_cidrs, start_time, end_time, args.region, args.profile
+            )
             return 0
-            
+
         log_query_start(
             logger,
             query_id,
@@ -514,7 +521,7 @@ def main() -> int:
         return 1
     except FileNotFoundError:
         log_query_end(logger, query_id, False, error="Log file not found")
-        log_file = locals().get('config', {}).get('log_file', 'unknown')
+        log_file = locals().get("config", {}).get("log_file", "unknown")
         print(f"Error: Log file '{log_file}' not found.")
         return 1
     except Exception as e:
@@ -522,5 +529,10 @@ def main() -> int:
         print(f"Unexpected error: {e}")
         return 1
     finally:
-        if "config" in locals() and "args" in locals() and config is not None and args is not None:
+        if (
+            "config" in locals()
+            and "args" in locals()
+            and config is not None
+            and args is not None
+        ):
             FileCleanupManager(config, args).cleanup()
