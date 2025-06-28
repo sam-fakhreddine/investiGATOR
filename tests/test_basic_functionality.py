@@ -2,18 +2,20 @@
 Basic functionality tests for VPC Flow Log Investigator.
 """
 
-import pytest
 import time
-from unittest.mock import patch, mock_open
-from vpc_flow_investigator.parser import parse_log_line, LogLineParser, LogFilter
+from unittest.mock import mock_open, patch
+
+import pytest
+
 from vpc_flow_investigator.config import (
     DEFAULT_CONFIG,
     SENSITIVE_PORTS,
     VPC_FLOW_LOG_PATTERN,
-    ConfigurationValidator,
     AnalysisConfig,
+    ConfigurationValidator,
 )
-from vpc_flow_investigator.time_utils import parse_time_input, parse_time_duration
+from vpc_flow_investigator.parser import LogFilter, LogLineParser, parse_log_line
+from vpc_flow_investigator.time_utils import parse_time_duration, parse_time_input
 
 
 class TestLogParsing:
@@ -22,9 +24,9 @@ class TestLogParsing:
     def test_parse_valid_log_line(self):
         """Test parsing a valid VPC Flow Log line."""
         log_line = "2 123456789012 eni-1234abcd 10.0.1.100 203.0.113.12 10.0.1.100 203.0.113.12 443 49152 6 20 4249 1418530010 1418530070 ACCEPT OK"
-        
+
         result = parse_log_line(log_line)
-        
+
         assert result is not None
         assert result["version"] == "2"
         assert result["account"] == "123456789012"
@@ -50,7 +52,7 @@ class TestLogParsing:
         """Test LogLineParser class functionality."""
         parser = LogLineParser()
         log_line = "2 123456789012 eni-1234abcd 10.0.1.100 203.0.113.12 10.0.1.100 203.0.113.12 443 49152 6 20 4249 1418530010 1418530070 ACCEPT OK"
-        
+
         result = parser.parse_line(log_line)
         assert result is not None
         assert result["srcaddr"] == "10.0.1.100"
@@ -66,19 +68,31 @@ class TestLogFiltering:
             "start_time": 1418530000,
             "end_time": 1418530100,
         }
-        
+
         log_filter = LogFilter(config)
-        
+
         # Test source address match
-        log1 = {"srcaddr": "10.0.1.100", "dstaddr": "203.0.113.12", "start": "1418530050"}
+        log1 = {
+            "srcaddr": "10.0.1.100",
+            "dstaddr": "203.0.113.12",
+            "start": "1418530050",
+        }
         assert log_filter._matches_instance(log1)
-        
+
         # Test destination address match
-        log2 = {"srcaddr": "203.0.113.12", "dstaddr": "10.0.1.101", "start": "1418530050"}
+        log2 = {
+            "srcaddr": "203.0.113.12",
+            "dstaddr": "10.0.1.101",
+            "start": "1418530050",
+        }
         assert log_filter._matches_instance(log2)
-        
+
         # Test no match
-        log3 = {"srcaddr": "192.168.1.1", "dstaddr": "203.0.113.12", "start": "1418530050"}
+        log3 = {
+            "srcaddr": "192.168.1.1",
+            "dstaddr": "203.0.113.12",
+            "start": "1418530050",
+        }
         assert not log_filter._matches_instance(log3)
 
     def test_log_filter_time_range(self):
@@ -88,17 +102,17 @@ class TestLogFiltering:
             "start_time": 1418530000,
             "end_time": 1418530100,
         }
-        
+
         log_filter = LogFilter(config)
-        
+
         # Test within range
         log1 = {"start": "1418530050"}
         assert log_filter._within_time_range(log1)
-        
+
         # Test before range
         log2 = {"start": "1418529999"}
         assert not log_filter._within_time_range(log2)
-        
+
         # Test after range
         log3 = {"start": "1418530101"}
         assert not log_filter._within_time_range(log3)
@@ -110,10 +124,18 @@ class TestConfiguration:
     def test_default_config_structure(self):
         """Test default configuration has required keys."""
         required_keys = [
-            "instance_id", "instance_ip", "vpc_cidr_prefix", "log_file",
-            "start_time", "end_time", "limit", "region", "log_group", "profile"
+            "instance_id",
+            "instance_ip",
+            "vpc_cidr_prefix",
+            "log_file",
+            "start_time",
+            "end_time",
+            "limit",
+            "region",
+            "log_group",
+            "profile",
         ]
-        
+
         for key in required_keys:
             assert key in DEFAULT_CONFIG
 
@@ -135,7 +157,7 @@ class TestConfiguration:
         start_time = int(time.time()) - 3600  # 1 hour ago
         end_time = int(time.time())
         ConfigurationValidator.validate_time_range(start_time, end_time)
-        
+
         # Invalid time range (start after end)
         with pytest.raises(ValueError, match="Start time must be before end time"):
             ConfigurationValidator.validate_time_range(end_time, start_time)
@@ -143,12 +165,16 @@ class TestConfiguration:
     def test_configuration_validator_instance_config(self):
         """Test configuration validator for instance config."""
         # Valid instance config
-        ConfigurationValidator.validate_instance_config("i-1234567890abcdef0", ["10.0.1.100"])
-        
+        ConfigurationValidator.validate_instance_config(
+            "i-1234567890abcdef0", ["10.0.1.100"]
+        )
+
         # Invalid instance ID
         with pytest.raises(ValueError, match="Invalid instance ID format"):
-            ConfigurationValidator.validate_instance_config("invalid-id", ["10.0.1.100"])
-        
+            ConfigurationValidator.validate_instance_config(
+                "invalid-id", ["10.0.1.100"]
+            )
+
         # Empty instance IPs
         with pytest.raises(ValueError, match="At least one instance IP is required"):
             ConfigurationValidator.validate_instance_config("i-1234567890abcdef0", [])
@@ -164,7 +190,7 @@ class TestConfiguration:
             end_time=int(time.time()),
         )
         config.validate()  # Should not raise
-        
+
         # Invalid config - empty instance ID
         config_invalid = AnalysisConfig(
             instance_id="",
@@ -183,11 +209,11 @@ class TestTimeUtils:
     def test_parse_time_input_relative(self):
         """Test parsing relative time inputs."""
         current_time = int(time.time())
-        
+
         # Test Unix timestamp as string
         result = parse_time_input(str(current_time))
         assert result == current_time
-        
+
         # Test relative times
         result_1h = parse_time_input("1h")
         expected_1h = current_time - 3600
@@ -215,31 +241,31 @@ class TestIntegration:
         log_data = """2 123456789012 eni-1234abcd 10.0.1.100 203.0.113.12 10.0.1.100 203.0.113.12 443 49152 6 20 4249 1418530010 1418530070 ACCEPT OK
 2 123456789012 eni-1234abcd 203.0.113.12 10.0.1.100 203.0.113.12 10.0.1.100 49152 443 6 20 4249 1418530010 1418530070 ACCEPT OK
 2 123456789012 eni-5678efgh 192.168.1.1 203.0.113.12 192.168.1.1 203.0.113.12 80 49153 6 10 2048 1418530020 1418530080 REJECT OK"""
-        
+
         config = {
             "instance_ips": ["10.0.1.100"],
             "start_time": 1418530000,
             "end_time": 1418530100,
         }
-        
+
         # Mock file reading
         with patch("builtins.open", mock_open(read_data=log_data)):
             from vpc_flow_investigator.parser import LogFileReader, LogLineParser
-            
+
             parser = LogLineParser()
             reader = LogFileReader(parser)
-            
+
             # Read logs
             logs = list(reader.read_file("mock_file.log"))
             assert len(logs) == 3
-            
+
             # Filter logs
             log_filter = LogFilter(config)
             filtered_logs = list(log_filter.filter_logs(iter(logs)))
-            
+
             # Should match 2 logs (both involving 10.0.1.100)
             assert len(filtered_logs) == 2
-            
+
             # Verify the filtered logs contain our target IP
             for log in filtered_logs:
                 assert "10.0.1.100" in [log["srcaddr"], log["dstaddr"]]

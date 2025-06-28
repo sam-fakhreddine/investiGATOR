@@ -2,10 +2,11 @@
 Pytest configuration and fixtures for VPC Flow Investigator tests.
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
@@ -20,12 +21,12 @@ def sample_vpc_log_data():
 @pytest.fixture
 def temp_log_file(sample_vpc_log_data):
     """Create a temporary log file with sample data."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
         f.write(sample_vpc_log_data)
         temp_path = f.name
-    
+
     yield temp_path
-    
+
     # Cleanup
     if os.path.exists(temp_path):
         os.unlink(temp_path)
