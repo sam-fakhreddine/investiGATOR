@@ -44,10 +44,12 @@ jobs:
 
     - name: Run tests
       run: |
+        set -euo pipefail
         poetry run pytest tests/ -v --tb=short --cov=src/vpc_flow_investigator --cov-report=xml --cov-report=term-missing
         
     - name: Run web tests with 100% coverage requirement
       run: |
+        set -euo pipefail
         poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py -v --cov=vpc_flow_investigator.web --cov-fail-under=100
         
     - name: Upload coverage to Codecov
@@ -57,15 +59,17 @@ jobs:
         file: ./coverage.xml
         fail_ci_if_error: false
 
-    - name: Run linting
+    - name: Run linting and coverage verification
       run: |
+        set -euo pipefail
+        
+        # Code quality checks
         poetry run black --check src/ tests/
         poetry run isort --check-only src/ tests/
         poetry run flake8 src/ tests/
         poetry run mypy src/
-
-    - name: Verify web interface coverage requirement
-      run: |
+        
+        # Verify web interface coverage requirement
         echo "Verifying 100% web interface test coverage..."
         poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py --cov=vpc_flow_investigator.web --cov-fail-under=100 -q
         echo "✅ Web interface has 100% test coverage"

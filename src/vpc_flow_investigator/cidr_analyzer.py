@@ -17,8 +17,9 @@ class CIDRAnalyzer:
         """Initialize with path to CIDR JSON files directory."""
         if cidrs_dir is None:
             # Default to cidrs directory relative to this file
-            cidrs_dir = Path(__file__).parent / "cidrs"
-        self.cidrs_dir = Path(cidrs_dir)
+            self.cidrs_dir = Path(__file__).parent / "cidrs"
+        else:
+            self.cidrs_dir = Path(cidrs_dir)
         self.cidr_data = self._load_cidr_data()
 
     def _load_cidr_data(self) -> Dict[str, Any]:
