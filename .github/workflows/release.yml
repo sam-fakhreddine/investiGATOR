@@ -39,6 +39,7 @@ jobs:
 
     - name: MANDATORY - Verify 100% web interface coverage
       run: |
+        set -euo pipefail
         echo "🔍 Verifying 100% web interface test coverage (MANDATORY FOR RELEASE)..."
         poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py \
           --cov=vpc_flow_investigator.web \
@@ -46,15 +47,17 @@ jobs:
           --cov-report=term-missing
         echo "✅ Web interface has 100% test coverage - RELEASE APPROVED"
 
-    - name: Run linting
+    - name: Run quality and security checks
       run: |
+        set -euo pipefail
+        
+        # Code quality checks
         poetry run black --check src/ tests/
         poetry run isort --check-only src/ tests/
         poetry run flake8 src/ tests/
         poetry run mypy src/
-
-    - name: Run security checks
-      run: |
+        
+        # Security checks
         poetry run bandit -r src/ -f json -o bandit-report.json || true
         poetry run safety check || true
 

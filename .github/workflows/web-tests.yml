@@ -95,8 +95,42 @@ jobs:
         poetry install --with dev
         poetry add --group dev httpx pytest-asyncio
 
-    - name: Start web server in background
+    - name: Start web server and run integration tests
       run: |
+        set -euo pipefail
+        
+        # Shared test functions
+        test_api_endpoint() {
+          curl -f http://127.0.0.1:8000/api/test > /dev/null
+          echo "✓ API test endpoint working"
+        }
+        
+        test_profiles_endpoint() {
+          local response=$(curl -f http://127.0.0.1:8000/api/profiles)
+          if echo "$response" | grep -q '"profiles"'; then
+            echo "✓ Profiles endpoint working"
+          else
+            echo "✗ Profiles endpoint failed: $response"
+            return 1
+          fi
+        }
+        
+        test_home_page() {
+          curl -f http://127.0.0.1:8000/ > /dev/null
+          echo "✓ Home page accessible"
+        }
+        
+        cleanup_server() {
+          if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
+            echo "Stopping server (PID: $SERVER_PID)"
+            kill "$SERVER_PID" 2>/dev/null || true
+            wait "$SERVER_PID" 2>/dev/null || true
+          fi
+        }
+        
+        # Ensure cleanup on exit
+        trap cleanup_server EXIT
+        
         # Start server in background
         poetry run uvicorn vpc_flow_investigator.web:app --host 127.0.0.1 --port 8000 --log-level error &
         SERVER_PID=$!
@@ -113,51 +147,10 @@ jobs:
           sleep 1
         done
         
-        # Verify server is actually responding
-        curl -f http://127.0.0.1:8000/api/test || (echo "❌ Server failed to start" && exit 1)
-
-    - name: Test web server endpoints
-      run: |
-        # Test API endpoints
-        curl -f http://127.0.0.1:8000/api/test
-        echo "✓ API test endpoint working"
-        
-        # Test profiles endpoint (should return default when no AWS config)
-        PROFILES_RESPONSE=$(curl -f http://127.0.0.1:8000/api/profiles)
-        if echo "$PROFILES_RESPONSE" | grep -q 'default'; then
-          echo "✓ Profiles endpoint working (returned default)"
-        else
-          echo "✗ Profiles endpoint failed: $PROFILES_RESPONSE"
-          exit 1
-        fi
-        
-        # Test home page (just verify it returns content)
-        curl -f http://127.0.0.1:8000/ > /dev/null
-        echo "✓ Home page accessible"
-
-    - name: Run integration tests
-      run: |
-        # Test API endpoints
-        curl -f http://127.0.0.1:8000/api/test
-        echo "✓ API test endpoint working"
-        
-        # Test profiles endpoint (should return default profile when no AWS config)
-        PROFILES_RESPONSE=$(curl -f http://127.0.0.1:8000/api/profiles)
-        if echo "$PROFILES_RESPONSE" | grep -q '"profiles"'; then
-          echo "✓ Profiles endpoint working"
-        else
-          echo "✗ Profiles endpoint failed: $PROFILES_RESPONSE"
-          exit 1
-        fi
-        
-        # Test home page (check for any HTML content)
-        curl -f http://127.0.0.1:8000/ > /tmp/homepage.html
-        if [ -s /tmp/homepage.html ]; then
-          echo "✓ Home page working"
-        else
-          echo "✗ Home page failed"
-          exit 1
-        fi
+        # Run all tests
+        test_api_endpoint
+        test_profiles_endpoint
+        test_home_page
         
         echo "All integration tests passed!"
 
@@ -186,16 +179,17 @@ jobs:
         poetry install --with dev
         poetry add --group dev httpx pytest-asyncio bandit safety
 
-    - name: Run security scan on web module
+    - name: Run security tests
       run: |
+        set -euo pipefail
+        
+        # Security scan
         poetry run bandit -r src/vpc_flow_investigator/web.py -f json -o bandit-report.json || true
         
-    - name: Check for known vulnerabilities
-      run: |
+        # Vulnerability check
         poetry run safety check --json --output safety-report.json || true
-
-    - name: Test for common web vulnerabilities
-      run: |
+        
+        # Web vulnerability tests
         poetry run python -c "
         from fastapi.testclient import TestClient
         from vpc_flow_investigator.web import WebApplicationFactory
@@ -256,6 +250,8 @@ jobs:
 
     - name: Run performance tests
       run: |
+        set -euo pipefail
+        
         poetry run python -c "
         import time
         import concurrent.futures
