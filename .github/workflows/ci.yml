@@ -51,7 +51,7 @@ jobs:
         poetry run pytest tests/test_web.py tests/test_web_e2e.py tests/test_web_coverage.py -v --cov=vpc_flow_investigator.web --cov-fail-under=100
         
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: matrix.python-version == '3.12'
       with:
         file: ./coverage.xml
