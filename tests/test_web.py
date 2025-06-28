@@ -271,7 +271,7 @@ class TestAnalyzers:
         assert isinstance(result, list)
         assert len(result) > 0
         assert all(
-            "protocol" in item and "action" in item and "count" in item for item in result
+           "protocol" in item and "action" in item and "count" in item for item in result
         )
 
     def test_ssh_inbound_analyzer(self, sample_logs):
@@ -397,7 +397,11 @@ class TestServices:
                 mock_print.assert_any_call(
                     "Starting VPC Flow Log Investigator Web Interface..."
                 )
-                mock_print.assert_any_call("Open your browser to: http://localhost:8000")
+
+                mock_print.assert_any_call(
+                    "Open your browser to: http://localhost:8000"
+                )
+
                 mock_run.assert_called_once()
 
     def test_configuration_builder(self):

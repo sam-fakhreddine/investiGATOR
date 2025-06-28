@@ -22,6 +22,7 @@ class TestMissingCoverage:
 
     def test_scan_cidrs_with_valid_json_file(self, client):
         """Test CIDR scanning with valid JSON file upload."""
+
         import json
         from io import BytesIO
 
