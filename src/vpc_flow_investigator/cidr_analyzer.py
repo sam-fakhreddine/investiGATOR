@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Set
 class CIDRAnalyzer:
     """Analyzes connections to IPv4 addresses from CIDR JSON files."""
 
-    def __init__(self, cidrs_dir: str = None):
+    def __init__(self, cidrs_dir: Optional[str] = None):
         """Initialize with path to CIDR JSON files directory."""
         if cidrs_dir is None:
             # Default to cidrs directory relative to this file
@@ -23,7 +23,7 @@ class CIDRAnalyzer:
 
     def _load_cidr_data(self) -> Dict[str, Any]:
         """Load all CIDR JSON files from the directory."""
-        cidr_data = {}
+        cidr_data: Dict[str, Any] = {}
 
         if not self.cidrs_dir.exists():
             return cidr_data
@@ -64,7 +64,7 @@ class CIDRAnalyzer:
             print("No CIDR data files found in cidrs directory")
             return
 
-        results = defaultdict(int)
+        results: Dict[Any, int] = defaultdict(int)
         matched_ips = set()
 
         for log in logs:
