@@ -23,7 +23,7 @@ mypy = "^1.13.0"
 flake8 = "^7.1.0"
 python-semantic-release = "^9.8.8"
 pre-commit = "^4.0.0"
-commitizen = "^3.29.0"
+commitizen = "^4.0.0"
 
 [tool.poetry.scripts]
 vpc-flow-investigator = "vpc_flow_investigator.cli:main"
