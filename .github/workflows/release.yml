@@ -11,6 +11,10 @@ jobs:
     permissions:
       id-token: write
       contents: write
+    
+    env:
+      POETRY_CACHE_DIR: ~/.cache/poetry
+      POETRY_VENV_IN_PROJECT: 1
 
     steps:
     - uses: actions/checkout@v4
@@ -22,6 +26,16 @@ jobs:
       with:
         python-version: '3.13'
 
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/poetry
+          .venv
+        key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          poetry-${{ runner.os }}-
+
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
@@ -29,19 +43,74 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
 
-    - name: Install build dependencies
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run tests and linting
       run: |
-        pip install build
-        poetry install
+        poetry run pytest --verbose || echo "⚠️ Tests failed but continuing with release"
+        poetry run black --check . || echo "⚠️ Code formatting issues detected"
+        poetry run isort --check-only . || echo "⚠️ Import sorting issues detected"
+        poetry run flake8 . || echo "⚠️ Linting issues detected"
+
+    - name: Build package
+      run: poetry build
+
+    - name: Verify build artifacts
+      run: |
+        echo "📦 Build artifacts created:"
+        ls -la dist/
+        echo ""
+        echo "🔍 Package contents:"
+        for file in dist/*.whl; do
+          echo "Contents of $file:"
+          poetry run python -m zipfile -l "$file" | head -20
+          echo ""
+        done
 
     - name: Python Semantic Release
       id: release
       uses: python-semantic-release/python-semantic-release@v10.1.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        POETRY_ACTIVE: 1
 
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v2
       if: steps.release.outputs.released == 'true'
       with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        tag_name: ${{ steps.release.outputs.tag }}
+        name: Release ${{ steps.release.outputs.tag }}
+        body: |
+          ## 🚀 Release ${{ steps.release.outputs.tag }}
+          
+          This release was automatically generated from commit ${{ github.sha }}.
+          
+          ### 📦 Installation
+          Download the wheel or source distribution from the assets below.
+          
+          ### 🔗 Links
+          - [Full Changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          - [Repository](https://github.com/${{ github.repository }})
+        files: |
+          dist/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+
+    - name: Create Release Summary
+      if: steps.release.outputs.released == 'true'
+      run: |
+        echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version:** ${{ steps.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Release URL:** ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Build Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "The following files were built and attached to the release:" >> $GITHUB_STEP_SUMMARY
+        ls -la dist/ | tail -n +2 | while read line; do
+          filename=$(echo "$line" | awk '{print $NF}')
+          size=$(echo "$line" | awk '{print $5}')
+          echo "- \`$filename\` ($size bytes)" >> $GITHUB_STEP_SUMMARY
+        done

@@ -69,7 +69,7 @@ extend-ignore = [
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
-build_command = "python -m build"
+build_command = "poetry build"
 commit_message = "chore(release): {version}"
 tag_format = "v{version}"
 changelog_file = "CHANGELOG.md"
