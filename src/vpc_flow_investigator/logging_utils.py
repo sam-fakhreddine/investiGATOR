@@ -33,9 +33,7 @@ def setup_logger(name: str) -> logging.Logger:
     console_handler.setLevel(logging.INFO)
 
     # Formatter
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
 

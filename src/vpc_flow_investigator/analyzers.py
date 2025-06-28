@@ -92,9 +92,7 @@ def ssh_response_traffic(logs: list[dict[str, Any]], config: dict[str, Any]) -> 
         print(f"{dstaddr:<20} {action:<10} {org:<25} {count:<10}")
 
 
-def ssh_outbound_connections(
-    logs: list[dict[str, Any]], config: dict[str, Any]
-) -> None:
+def ssh_outbound_connections(logs: list[dict[str, Any]], config: dict[str, Any]) -> None:
     """Analyze SSH outbound connections."""
     results: dict[tuple[str, str], int] = defaultdict(int)
 
@@ -119,9 +117,7 @@ def ssh_outbound_connections(
         print(f"{dstaddr:<20} {action:<10} {org:<25} {count:<10}")
 
 
-def external_inbound_traffic(
-    logs: list[dict[str, Any]], config: dict[str, Any]
-) -> None:
+def external_inbound_traffic(logs: list[dict[str, Any]], config: dict[str, Any]) -> None:
     """Analyze external inbound traffic."""
     results: dict[tuple[str, str, str], int] = defaultdict(int)
     external_ips = set()
@@ -156,9 +152,7 @@ def external_inbound_traffic(
         print(f"{srcaddr:<20} {action:<10} {service:<20} {org:<25} {count:<10}")
 
 
-def external_outbound_traffic(
-    logs: list[dict[str, Any]], config: dict[str, Any]
-) -> None:
+def external_outbound_traffic(logs: list[dict[str, Any]], config: dict[str, Any]) -> None:
     """Analyze external outbound traffic."""
     results: dict[tuple[str, str, str], int] = defaultdict(int)
 
@@ -189,9 +183,7 @@ def external_outbound_traffic(
         )
 
 
-def external_traffic_summary(
-    logs: list[dict[str, Any]], config: dict[str, Any]
-) -> None:
+def external_traffic_summary(logs: list[dict[str, Any]], config: dict[str, Any]) -> None:
     """Analyze external traffic summary by action."""
     results: dict[str, int] = defaultdict(int)
 
@@ -405,9 +397,7 @@ def rejected_traffic(logs: list[dict[str, Any]], config: dict[str, Any]) -> None
     )
     print("-" * 76)
 
-    for (srcaddr, dstaddr, dstport, protocol), count in sorted_results[
-        : config["limit"]
-    ]:
+    for (srcaddr, dstaddr, dstport, protocol), count in sorted_results[: config["limit"]]:
         # Determine which IP is external for WHOIS lookup
         match (
             is_external_ip(srcaddr, config["vpc_cidr_prefix"]),

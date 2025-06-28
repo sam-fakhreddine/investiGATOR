@@ -171,9 +171,7 @@ class TestConfiguration:
 
         # Invalid instance ID
         with pytest.raises(ValueError, match="Invalid instance ID format"):
-            ConfigurationValidator.validate_instance_config(
-                "invalid-id", ["10.0.1.100"]
-            )
+            ConfigurationValidator.validate_instance_config("invalid-id", ["10.0.1.100"])
 
         # Empty instance IPs
         with pytest.raises(ValueError, match="At least one instance IP is required"):

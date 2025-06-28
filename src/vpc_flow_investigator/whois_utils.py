@@ -147,9 +147,7 @@ class ReverseDNSLookup:
                 description=hostname if hostname != "-" else "Unknown",
             )
         except (socket.herror, socket.gaierror):
-            return WhoisInfo(
-                org="Unknown", country="-", description="DNS lookup failed"
-            )
+            return WhoisInfo(org="Unknown", country="-", description="DNS lookup failed")
 
     def _extract_org_from_hostname(self, hostname: str) -> str:
         """Extract organization from hostname."""

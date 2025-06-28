@@ -2,9 +2,6 @@
 End-to-end tests for the web interface.
 """
 
-import asyncio
-import json
-import time
 from unittest.mock import Mock, patch
 
 import pytest
