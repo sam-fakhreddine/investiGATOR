@@ -219,9 +219,7 @@ class VPCFlowLogDownloader:
         try:
             if debug:
                 instance_desc = instance_id or "all instances"
-                print(
-                    f"[DEBUG] Starting comprehensive download for {instance_desc}"
-                )
+                print(f"[DEBUG] Starting comprehensive download for {instance_desc}")
                 print(f"[DEBUG] Log group: {log_group}")
                 print(f"[DEBUG] Time range: {start_time} to {end_time}")
                 print(f"[DEBUG] Temp file: {temp_file.name}")
@@ -300,7 +298,9 @@ class VPCFlowLogDownloader:
     ) -> str:
         """Start CloudWatch Logs query and return query ID."""
         if instance_id:
-            query = f"fields @timestamp, @message | filter @message like '{instance_id}'"
+            query = (
+                f"fields @timestamp, @message | filter @message like '{instance_id}'"
+            )
         else:
             query = "fields @timestamp, @message"
 
