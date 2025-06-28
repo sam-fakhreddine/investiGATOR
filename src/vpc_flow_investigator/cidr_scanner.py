@@ -4,6 +4,7 @@ Scan a specific VPC Flow Log file for IPs that appear in CIDR directory.
 """
 
 import argparse
+from typing import Optional
 
 from .cidr_analyzer import CIDRAnalyzer
 from .parser import read_log_file
@@ -13,8 +14,8 @@ def scan_flowlog_for_cidrs(
     log_group: str,
     start_time: int,
     end_time: int,
-    region: str = None,
-    profile: str = None,
+    region: Optional[str] = None,
+    profile: Optional[str] = None,
 ) -> None:
     """Scan AWS flow log group for IPs matching CIDR ranges."""
     from .aws_utils import download_vpc_flow_logs

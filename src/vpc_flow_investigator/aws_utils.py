@@ -207,7 +207,7 @@ class VPCFlowLogDownloader:
     def download_logs(
         self,
         log_group: str,
-        instance_id: str,
+        instance_id: Optional[str],
         start_time: int,
         end_time: int,
         debug: bool = False,
@@ -218,15 +218,17 @@ class VPCFlowLogDownloader:
 
         try:
             if debug:
+                instance_desc = instance_id or "all instances"
                 print(
-                    f"[DEBUG] Starting comprehensive download for instance {instance_id}"
+                    f"[DEBUG] Starting comprehensive download for {instance_desc}"
                 )
                 print(f"[DEBUG] Log group: {log_group}")
                 print(f"[DEBUG] Time range: {start_time} to {end_time}")
                 print(f"[DEBUG] Temp file: {temp_file.name}")
             else:
+                instance_desc = instance_id or "all instances"
                 print(
-                    f"Downloading VPC Flow Logs for instance {instance_id} (comprehensive analysis)..."
+                    f"Downloading VPC Flow Logs for {instance_desc} (comprehensive analysis)..."
                 )
 
             # Use pagination to get all results
@@ -291,13 +293,16 @@ class VPCFlowLogDownloader:
     def _start_query(
         self,
         log_group: str,
-        instance_id: str,
+        instance_id: Optional[str],
         start_time: int,
         end_time: int,
         debug: bool = False,
     ) -> str:
         """Start CloudWatch Logs query and return query ID."""
-        query = f"fields @timestamp, @message | filter @message like '{instance_id}'"
+        if instance_id:
+            query = f"fields @timestamp, @message | filter @message like '{instance_id}'"
+        else:
+            query = "fields @timestamp, @message"
 
         if debug:
             print(f"[DEBUG] CloudWatch query: {query}")
@@ -406,7 +411,7 @@ def find_vpc_flow_log_group(
 
 def download_vpc_flow_logs(
     log_group: str,
-    instance_id: str,
+    instance_id: Optional[str],
     start_time: int,
     end_time: int,
     region: Optional[str] = None,
