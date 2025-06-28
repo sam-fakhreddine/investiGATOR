@@ -9,20 +9,21 @@
   [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 </div>
 
-**investiGATOR** - A comprehensive AWS VPC Flow Log analysis tool that provides both command-line and modern web interfaces for investigating network traffic patterns, security events, and potential threats in your AWS infrastructure.
+**investiGATOR** - A comprehensive AWS VPC Flow Log analysis tool that provides both command-line and web interfaces for investigating network traffic patterns, security events, and potential threats in your AWS infrastructure.
 
 ## 🚀 Features
 
 ### Core Capabilities
 
-- **🔍 Comprehensive Analysis**: 12 different analysis types for thorough traffic investigation
-- **🌐 Modern Web Interface**: Interactive dashboard with calendar pickers and real-time results
+- **🔍 Comprehensive Analysis**: 10+ different analysis types for thorough traffic investigation
+- **🌐 Web Interface**: FastAPI-based web interface for interactive analysis
 - **⚡ Auto-Discovery**: Automatically finds instance IPs, VPC CIDR blocks, and CloudWatch log groups
 - **🔐 Multi-Account Support**: AWS profile support for cross-account analysis
 - **📊 Protocol Intelligence**: Human-readable protocol names (TCP, UDP, ICMP, etc.)
 - **🎯 WHOIS Integration**: Automatic organization lookup for external IP addresses
 - **📝 Audit Logging**: All queries logged with unique IDs for debugging and compliance
-- **⚙️ Flexible Time Ranges**: Support for relative times (1h, 3d, 2w) and absolute timestamps
+- **⚙️ Flexible Time Ranges**: Support for relative times (1h, 3d, 2W) and absolute timestamps
+- **🧪 Comprehensive Testing**: Full test suite with 21+ tests covering core functionality
 
 ### Analysis Types
 
@@ -40,7 +41,6 @@
 | `port-specific` | Traffic for specific port | Service-specific investigation |
 | `sensitive-ports` | RDP, SQL, MongoDB, Redis traffic | Database and remote access monitoring |
 | `rejected` | Blocked connection attempts | Security group effectiveness |
-| `cidr-connections` | Connections to specific CIDR ranges | Cloud provider traffic analysis |
 
 ## 📦 Installation
 
@@ -53,14 +53,11 @@
 ### Quick Setup
 
 ```bash
-# Navigate to project directory
-cd vpcflowlogs
+# Clone and navigate to project directory
+cd investiGATOR
 
 # Run automated setup
 make setup
-
-# Or use the setup script directly
-./scripts/setup.sh
 ```
 
 ### Manual Installation
@@ -80,10 +77,7 @@ poetry run vpc-flow-investigator --help
 
 ```bash
 # Install with development dependencies
-poetry install --with dev
-
-# Set up pre-commit hooks (optional)
-poetry run pre-commit install
+poetry install
 
 # Run tests
 make test
@@ -97,7 +91,7 @@ make lint
 
 ## 🖥️ Usage
 
-### Web Interface (Recommended)
+### Web Interface
 
 Start the web server:
 
@@ -109,13 +103,10 @@ Then open [http://localhost:8000](http://localhost:8000) in your browser.
 
 **Web Interface Features:**
 
-- 🎛️ **Analysis Type Selection**: All analysis types with dynamic options
-- 📊 **Interactive Results**: JSON-formatted results display
-- 🔄 **Real-time Processing**: Live updates during analysis
-- 📱 **Responsive Design**: Works on desktop, tablet, and mobile
-- 🔍 **CIDR Scanning**: Upload CIDR files for specialized analysis
+- 🎛️ **Analysis Type Selection**: All analysis types available
+- 📊 **Interactive Results**: Clean results display
 - ⚙️ **AWS Profile Support**: Multi-account analysis capability
-- 🎨 **Theme Support**: Light and dark mode toggle
+- 📱 **Responsive Design**: Works on desktop and mobile
 
 ### Command Line Interface
 
@@ -177,35 +168,29 @@ poetry run vpc-flow-investigator \
 # Relative time formats
 --start-time 1h    # 1 hour ago
 --start-time 3d    # 3 days ago
---start-time 2w    # 2 weeks ago
+--start-time 2W    # 2 weeks ago (capital W)
 --start-time 1M    # 1 month ago
 
 # Absolute timestamps
 --start-time 1640995200                    # Unix timestamp
 --start-time "2024-01-01T00:00:00"         # ISO format
---start-time "2024-01-01 00:00:00"         # Human readable
 
 # End time options
---end-time now                             # Current time
+--end-time 1640995200                      # Unix timestamp
 --end-time 1d                              # 1 day ago
 --end-time "2024-01-02T00:00:00"           # Specific time
 ```
 
 #### CIDR Analysis
 
-The tool includes specialized CIDR analysis capabilities:
+The tool includes CIDR analysis capabilities:
 
 ```bash
 # Scan logs for connections to specific CIDR ranges
 poetry run vpc-flow-investigator --scan-cidrs log-group-name
-
-# CIDR connections analysis (part of regular analysis)
-poetry run vpc-flow-investigator \
-  --instance-id i-0123456789abcdef0 \
-  --analysis cidr-connections
 ```
 
-**CIDR Data Files**: Place JSON files with CIDR ranges in `src/vpc_flow_investigator/cidrs/` directory. The analyzer will automatically load and use them for connection analysis.
+**CIDR Data Files**: Place JSON files with CIDR ranges in `src/vpc_flow_investigator/cidrs/` directory.
 
 ## 🔧 Configuration
 
@@ -319,7 +304,7 @@ google               8.8.8.8          Mountain View   CA         ACCEPT   12
 ### Project Structure
 
 ```text
-vpcflowlogs/
+investiGATOR/
 ├── src/vpc_flow_investigator/     # Main application code
 │   ├── analyzers.py               # Analysis logic
 │   ├── aws_utils.py               # AWS integration
@@ -329,11 +314,18 @@ vpcflowlogs/
 │   ├── whois_utils.py             # WHOIS lookups
 │   ├── cidr_analyzer.py           # CIDR analysis
 │   ├── cidr_scanner.py            # CIDR scanning
-│   ├── performance_utils.py       # Performance monitoring
+│   ├── config.py                  # Configuration management
+│   ├── time_utils.py              # Time parsing utilities
+│   ├── protocol_utils.py          # Protocol name mapping
+│   ├── logging_utils.py           # Logging utilities
 │   ├── cidrs/                     # CIDR data files
 │   ├── static/                    # Web assets
 │   └── templates/                 # HTML templates
 ├── tests/                         # Test suite
+│   ├── test_basic_functionality.py
+│   ├── test_cli.py
+│   ├── conftest.py
+│   └── README.md
 ├── docs/                          # Documentation
 ├── scripts/                       # Utility scripts
 ├── config/                        # Configuration files
@@ -354,19 +346,29 @@ vpcflowlogs/
 
 ## 🧪 Testing
 
+The project includes a comprehensive test suite with 21+ tests covering core functionality:
+
 ```bash
 # Run all tests
 make test
 
+# Run with verbose output
+poetry run pytest tests/ -v
+
 # Run specific test file
-poetry run pytest tests/test_analyzers.py
+poetry run pytest tests/test_basic_functionality.py
 
-# Run with coverage
-poetry run pytest --cov=vpc_flow_investigator tests/
-
-# Run integration tests
-poetry run pytest tests/integration/
+# Run specific test class
+poetry run pytest tests/test_basic_functionality.py::TestLogParsing
 ```
+
+**Test Coverage:**
+- VPC Flow Log parsing and validation
+- Log filtering by instance and time range
+- Configuration validation
+- Time utility functions
+- CLI argument parsing
+- End-to-end integration tests
 
 ## 🤝 Contributing
 
@@ -428,9 +430,8 @@ We welcome contributions!
 
 - **Efficient Parsing**: Optimized log parsing with minimal memory usage
 - **Batch Processing**: WHOIS lookups batched to reduce API calls
-- **Caching**: Intelligent caching of AWS API responses and WHOIS data
 - **Streaming**: Large log files processed in streaming fashion
-- **Parallel Processing**: Multi-threaded analysis for large datasets
+- **Modular Design**: Clean separation of concerns for maintainability
 
 ## 🐛 Troubleshooting
 
