@@ -29,8 +29,10 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
 
-    - name: Install build
-      run: pip install build
+    - name: Install build dependencies
+      run: |
+        pip install build
+        poetry install
 
     - name: Python Semantic Release
       id: release
