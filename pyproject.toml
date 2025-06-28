@@ -36,10 +36,31 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 88
 target-version = ['py312']
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.venv
+  | venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
 
 [tool.isort]
 profile = "black"
 line_length = 88
+skip_glob = [
+    ".venv/*",
+    "venv/*",
+    "build/*",
+    "dist/*",
+    "__pycache__/*",
+    ".pytest_cache/*",
+    ".mypy_cache/*"
+]
 
 [tool.mypy]
 python_version = "3.12"
@@ -51,13 +72,42 @@ check_untyped_defs = false
 mypy_path = "src"
 namespace_packages = true
 explicit_package_bases = true
+exclude = [
+    "build/",
+    "dist/",
+    ".venv/",
+    "venv/",
+    "__pycache__/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    "node_modules/"
+]
 
 [[tool.mypy.overrides]]
-module = ["boto3", "botocore.*"]
+module = [
+    "boto3",
+    "botocore.*",
+    "fastapi.*", 
+    "uvicorn.*",
+    "jinja2.*",
+    "pytest.*"
+]
 ignore_missing_imports = true
 
 [tool.flake8]
 max-line-length = 88
+exclude = [
+    ".venv",
+    "venv",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".pytest_cache",
+    ".mypy_cache",
+    "node_modules"
+]
 extend-ignore = [
     "E203",  # whitespace before ':' (conflicts with black)
     "E501",  # line too long (black handles this)

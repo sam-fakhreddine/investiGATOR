@@ -49,15 +49,15 @@ jobs:
     - name: Auto-fix formatting issues
       run: |
         echo "🔧 Auto-fixing formatting issues..."
-        poetry run black .
-        poetry run isort .
+        poetry run black src/ tests/
+        poetry run isort src/ tests/
         
     - name: Check for remaining issues
       run: |
         echo "🔍 Checking for any remaining issues..."
-        poetry run black --check . || echo "⚠️ Code formatting issues detected"
-        poetry run isort --check-only . || echo "⚠️ Import sorting issues detected"
-        poetry run flake8 . || echo "⚠️ Linting issues detected"
+        poetry run black --check src/ tests/ || echo "⚠️ Code formatting issues detected"
+        poetry run isort --check-only src/ tests/ || echo "⚠️ Import sorting issues detected"
+        poetry run flake8 src/ tests/ || echo "⚠️ Linting issues detected"
 
     - name: Commit formatting fixes
       run: |
