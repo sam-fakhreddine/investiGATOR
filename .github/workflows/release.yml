@@ -59,7 +59,7 @@ jobs:
         
         # Security checks
         poetry run bandit -r src/ -f json -o bandit-report.json || true
-        poetry run safety check || true
+        poetry run safety check --output json > safety-report.json || true
 
   release:
     name: Create Release
